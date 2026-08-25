@@ -1,0 +1,61 @@
+@import "tailwindcss";
+
+@theme {
+  --color-bg: #0b0c0b;
+  --color-surface: #121412;
+  --color-elevated: #181b18;
+  --color-panel: #101210;
+  --color-fg: #e6e2d6;
+  --color-muted: #9a9a8f;
+  --color-subtle: #6b6b62;
+  --color-accent: #d4d0c4;
+  --color-accent-fg: #0b0c0b;
+  --color-border: #262826;
+  --color-border-strong: #3a3d38;
+  --color-up: #3f9d6e;
+  --color-down: #c45c52;
+  --color-warn: #c4a15c;
+  --color-ring: #d4d0c4;
+  --font-sans: "IBM Plex Sans", "Segoe UI", system-ui, sans-serif;
+  --font-mono: "IBM Plex Mono", ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+  --radius-xs: 4px;
+  --radius-sm: 6px;
+  --radius-md: 10px;
+  --radius-lg: 14px;
+  --radius-xl: 20px;
+}
+
+@layer base {
+  html {
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+  html,
+  body,
+  #app {
+    min-height: 100%;
+    background: var(--color-bg);
+    color: var(--color-fg);
+  }
+  button:not(:disabled),
+  [role="button"]:not(:disabled) {
+    cursor: pointer;
+  }
+  h1,
+  h2,
+  h3 {
+    text-wrap: balance;
+  }
+  p {
+    text-wrap: pretty;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
+}

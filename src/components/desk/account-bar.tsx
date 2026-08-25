@@ -1,0 +1,51 @@
+import { useWolf, useEquity } from "@/lib/wolfpit/store";
+import { fmtPct, fmtUsd } from "@/lib/utils";
+import { Button } from "@/components/ui/button";
+
+export function AccountBar() {
+  const eq = useEquity();
+  const start = useWolf((s) => s.account.startEquity);
+  const usdc = useWolf((s) => s.account.usdc);
+  const realized = useWolf((s) => s.account.realized);
+  const speed = useWolf((s) => s.simSpeed);
+  const setSpeed = useWolf((s) => s.setSpeed);
+  const reset = useWolf((s) => s.reset);
+  const pnl = eq - start;
+  const up = pnl >= 0;
+  return (
+    <div className="flex flex-wrap items-center gap-x-5 gap-y-2 border-b border-border bg-panel px-3 py-2 text-xs">
+      <div>
+        <div className="text-[10px] uppercase tracking-wider text-subtle">Net liq</div>
+        <div className="font-mono tabular-nums text-sm text-fg">{fmtUsd(eq)}</div>
+      </div>
+      <div>
+        <div className="text-[10px] uppercase tracking-wider text-subtle">Open P&L</div>
+        <div className={`font-mono tabular-nums text-sm ${up ? "text-up" : "text-down"}`}>
+          {up ? "+" : "−"}
+          {fmtUsd(Math.abs(pnl))} ({fmtPct(pnl / start)})
+        </div>
+      </div>
+      <div>
+        <div className="text-[10px] uppercase tracking-wider text-subtle">Cash USDC</div>
+        <div className="font-mono tabular-nums text-sm">{fmtUsd(usdc)}</div>
+      </div>
+      <div>
+        <div className="text-[10px] uppercase tracking-wider text-subtle">Realized</div>
+        <div className={`font-mono tabular-nums text-sm ${realized >= 0 ? "text-up" : "text-down"}`}>
+          {fmtUsd(realized)}
+        </div>
+      </div>
+      <div className="ml-auto flex items-center gap-2">
+        <span className="text-[10px] uppercase tracking-wider text-subtle">Clock</span>
+        {([1, 10, 60] as const).map((n) => (
+          <Button key={n} size="sm" variant={speed === n ? "default" : "outline"} onClick={() => setSpeed(n)}>
+            {n}×
+          </Button>
+        ))}
+        <Button size="sm" variant="ghost" onClick={reset}>
+          Reset paper
+        </Button>
+      </div>
+    </div>
+  );
+}

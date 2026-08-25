@@ -1,0 +1,83 @@
+export function clamp(n: number, a: number, b: number) {
+  return Math.min(b, Math.max(a, n));
+}
+
+export function randn() {
+  let u = 0;
+  let v = 0;
+  while (u === 0) u = Math.random();
+  while (v === 0) v = Math.random();
+  return Math.sqrt(-2.0 * Math.log(u)) * Math.cos(2.0 * Math.PI * v);
+}
+
+export function normCdf(x: number) {
+  const a1 = 0.254829592;
+  const a2 = -0.284496736;
+  const a3 = 1.421413741;
+  const a4 = -1.453152027;
+  const a5 = 1.061405429;
+  const p = 0.3275911;
+  const sign = x < 0 ? -1 : 1;
+  const ax = Math.abs(x) / Math.SQRT2;
+  const t = 1 / (1 + p * ax);
+  const y = 1 - ((((a5 * t + a4) * t + a3) * t + a2) * t + a1) * t * Math.exp(-ax * ax);
+  return 0.5 * (1 + sign * y);
+}
+
+export function bsCall(S: number, K: number, T: number, r: number, sig: number) {
+  if (T <= 1 / 365 / 24) return Math.max(S - K, 0);
+  const v = Math.max(sig, 0.01);
+  const d1 = (Math.log(S / K) + (r + (v * v) / 2) * T) / (v * Math.sqrt(T));
+  const d2 = d1 - v * Math.sqrt(T);
+  return S * normCdf(d1) - K * Math.exp(-r * T) * normCdf(d2);
+}
+
+export function bsPut(S: number, K: number, T: number, r: number, sig: number) {
+  if (T <= 1 / 365 / 24) return Math.max(K - S, 0);
+  const call = bsCall(S, K, T, r, sig);
+  return call - S + K * Math.exp(-r * T);
+}
+
+export function bsDelta(S: number, K: number, T: number, r: number, sig: number, type: "call" | "put") {
+  if (T <= 1 / 365 / 24) {
+    if (type === "call") return S > K ? 1 : 0;
+    return S < K ? -1 : 0;
+  }
+  const v = Math.max(sig, 0.01);
+  const d1 = (Math.log(S / K) + (r + (v * v) / 2) * T) / (v * Math.sqrt(T));
+  const nd1 = normCdf(d1);
+  return type === "call" ? nd1 : nd1 - 1;
+}
+
+export function yearsTo(expiry: number, now: number) {
+  return Math.max(0, (expiry - now) / (365.25 * 24 * 3600 * 1000));
+}
+
+export function nextFriday(from: number, weeks = 0) {
+  const d = new Date(from);
+  const day = d.getUTCDay();
+  let add = (5 - day + 7) % 7;
+  if (add === 0) add = 7;
+  add += weeks * 7;
+  d.setUTCDate(d.getUTCDate() + add);
+  d.setUTCHours(20, 0, 0, 0);
+  return d.getTime();
+}
+
+export function monthEnd(from: number) {
+  const d = new Date(from);
+  const e = new Date(Date.UTC(d.getUTCFullYear(), d.getUTCMonth() + 1, 0, 20, 0, 0, 0));
+  if (e.getTime() - from < 2 * 86400000) {
+    return new Date(Date.UTC(d.getUTCFullYear(), d.getUTCMonth() + 2, 0, 20, 0, 0, 0)).getTime();
+  }
+  return e.getTime();
+}
+
+export function ammOut(dx: number, x: number, y: number, feeBps: number) {
+  const dxNet = dx * (1 - feeBps / 10_000);
+  return (dxNet * y) / (x + dxNet);
+}
+
+export function uid(prefix: string) {
+  return `${prefix}-${Math.random().toString(36).slice(2, 8)}${Date.now().toString(36).slice(-4)}`;
+}
