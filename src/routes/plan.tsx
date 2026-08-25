@@ -5,7 +5,7 @@ import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/plan")({ component: PlanPage });
 
-const TABS = ["Briefing", "Team", "Roadmap", "Quant", "Business", "Protocol", "Legal"] as const;
+const TABS = ["Briefing", "Week 1", "Notes", "Team", "Roadmap", "Quant", "Business", "Protocol", "Legal"] as const;
 type Tab = (typeof TABS)[number];
 
 function PlanPage() {
@@ -16,8 +16,7 @@ function PlanPage() {
         <p className="font-mono text-[11px] uppercase tracking-wider text-subtle">Internal · Nick, CEO</p>
         <h1 className="mt-2 text-2xl font-medium">WolfPit operating plan</h1>
         <p className="mt-2 text-sm leading-relaxed text-muted">
-          Simulation desk is live. Real funds stay gated until inventory, audits, and counsel clear. Full
-          markdown copies live in the repo under docs/ for GitHub.
+          Simulation desk is live. Week 1 work order is under Plan → Week 1. Build log under Notes.
         </p>
         <div className="mt-6 flex flex-wrap gap-1 border-b border-border">
           {TABS.map((t) => (
@@ -35,6 +34,8 @@ function PlanPage() {
         </div>
         <article className="prose-wp mt-8 space-y-4 text-sm leading-relaxed text-muted">
           {tab === "Briefing" && <Briefing />}
+          {tab === "Week 1" && <Week1 />}
+          {tab === "Notes" && <Notes />}
           {tab === "Team" && <Team />}
           {tab === "Roadmap" && <Roadmap />}
           {tab === "Quant" && <Quant />}
@@ -86,6 +87,62 @@ function Briefing() {
         <li>Audit, bug bounty, then a single ETH-USDC vault with tiny caps.</li>
         <li>Only then flip the desk from SIM to LIVE. Same screens.</li>
       </ol>
+    </>
+  );
+}
+
+function Week1() {
+  return (
+    <>
+      <p className="text-fg">25–31 Aug 2026. Full tickets: docs/WEEK1.md. Log: docs/BUILD-NOTES.md.</p>
+      <H>Done when</H>
+      <ol className="list-decimal space-y-1 pl-5">
+        <li>Every RISK.md v1 limit is in engine.ts (or Q-signed wontfix).</li>
+        <li>Five drills recorded and green.</li>
+        <li>Foundry vault skeleton: α=0.40, covered call, cash-secured put. forge test green.</li>
+        <li>Desk blanks a dead side and prints the reject string.</li>
+        <li>Friday demo: +40% still covered, −20% liquidates, LP is not a piggy bank.</li>
+      </ol>
+      <H>Do not start</H>
+      <p>Uni v4 hook. Base Sepolia. Hyperliquid. User-sold options. Ethereum L1. Raising α.</p>
+      <H>Tickets</H>
+      <ul className="list-disc space-y-1 pl-5">
+        <li>W1-00 Spec lock — N</li>
+        <li>W1-01 DeskEngine + golden tests — P+Q</li>
+        <li>W1-02 Remaining RISK limits — Q (Γ, ν, OI, fill band, circuit, 0.5 vol-pt, 1% insurance halt)</li>
+        <li>W1-03 Five drills — Q</li>
+        <li>W1-04 Tick-log export — U</li>
+        <li>W1-05 Foundry skeleton — P</li>
+        <li>W1-06 Insurance / harvest tax — P+Q</li>
+        <li>W1-07 Blank quotes + reject on ticket — U</li>
+        <li>W1-08 Gauge display 70/20/10 — U</li>
+        <li>W1-09 VITE_CHAIN banner — U</li>
+        <li>W1-10 Daily build notes — all</li>
+        <li>W1-11 Copy / legal — L+N</li>
+        <li>W1-12 Friday demo — all</li>
+      </ul>
+      <H>Calendar</H>
+      <p>Tue kickoff. Wed limits + Foundry + blank quotes. Thu drills 1–3 + vault math. Fri drills 4–5 + demo. Mon close. Red Friday extends week 1; it does not start v4.</p>
+    </>
+  );
+}
+
+function Notes() {
+  return (
+    <>
+      <p className="text-fg">Append-only. Newest first. Full file: docs/BUILD-NOTES.md.</p>
+      <H>2026-08-25 (Tue) — kickoff</H>
+      <ul className="list-disc space-y-1 pl-5">
+        <li>Done: specs locked. Week 1 order written. Desk already paper + Base + insurance + Δ/Γ.</li>
+        <li>Blocked: P/Q/U/L seats may be empty. Tickets stay on the role.</li>
+        <li>
+          Tape: α=0.40 in spec. Engine still missing Γ/ν/OI/circuit caps (W1-02). Drills unrecorded
+          (W1-03). No Foundry (W1-05).
+        </li>
+        <li>Nick initials: pending in the markdown log.</li>
+      </ul>
+      <H>Ritual</H>
+      <p>Every day: Done / Blocked / Tape. Do not rewrite history. Do not deploy from a red tape line.</p>
     </>
   );
 }

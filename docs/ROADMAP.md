@@ -11,7 +11,11 @@ Paper desk. Spot, minis, TEST pool names, farms, stake, `/plan`.
 - Sim: RV→IV, put skew, util-weighted farm, insurance, Δ/Γ panel, IM 25/12.5, α=0.40
 - Still paper. Same UI.
 
-## P2 — 0–8 weeks (contracts)
+## P1b — Week 1 (25–31 Aug 2026)
+
+Work order: [WEEK1.md](./WEEK1.md). Log: [BUILD-NOTES.md](./BUILD-NOTES.md).
+
+Close RISK gaps in sim, record five drills, Foundry vault skeleton, blank quotes. No Sepolia until that is green.
 
 - Foundry, Base Sepolia
 - Uni v4 hook spec + dealer vault + ERC-1155

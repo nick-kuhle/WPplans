@@ -24,11 +24,11 @@ npm run dev
 | `/trade` | Desk |
 | `/pools` | LP + farms |
 | `/stake` | WPIT (insurance junior) |
-| `/plan` | Briefing + quant |
+| `/plan` | Briefing, quant, **week 1 work order** |
 
 ## Docs
 
-See [docs/README.md](docs/README.md). Start with [CHAIN.md](docs/CHAIN.md), [MM.md](docs/MM.md), [RISK.md](docs/RISK.md).
+Start with [docs/WEEK1.md](docs/WEEK1.md) and [docs/CHAIN.md](docs/CHAIN.md).
 
 ## Hard rules
 
