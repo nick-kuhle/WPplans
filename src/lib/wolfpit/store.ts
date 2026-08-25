@@ -66,7 +66,7 @@ export const useWolf = create<WolfStore>()(
       clearError: () => set({ lastError: null }),
     }),
     {
-      name: "wolfpit-sim-v2",
+      name: "wolfpit-sim-v3",
       skipHydration: true,
       partialize: (s) => ({
         clock: s.clock,
@@ -85,6 +85,7 @@ export const useWolf = create<WolfStore>()(
         options: s.options,
         fills: s.fills,
         farmWpit: s.farmWpit,
+        insuranceUsdc: s.insuranceUsdc,
         simSpeed: s.simSpeed,
         liquidations: s.liquidations,
       }),

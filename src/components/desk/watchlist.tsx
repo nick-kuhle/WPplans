@@ -1,9 +1,10 @@
-import { freeEth, freeUsdc, maxNetLongEth, maxNetShortEth, utilEth } from "@/lib/wolfpit/engine";
+import { bookGreeks, freeEth, freeUsdc, maxNetLongEth, maxNetShortEth, utilEth } from "@/lib/wolfpit/engine";
 import { useWolf } from "@/lib/wolfpit/store";
 import { fmtPct, fmtPx, fmtUsd } from "@/lib/utils";
 
 export function Watchlist() {
   const s = useWolf();
+  const g = bookGreeks(s);
   const ethPool = s.pools["ETH-USDC"];
   const wUsd = s.pools["WPIT-USDC-TEST"];
   const wEth = s.pools["WPIT-ETH-TEST"];
@@ -16,7 +17,9 @@ export function Watchlist() {
   ];
   return (
     <div className="flex h-full min-h-0 flex-col bg-panel">
-      <div className="border-b border-border px-3 py-2 text-[10px] uppercase tracking-wider text-subtle">Markets</div>
+      <div className="border-b border-border px-3 py-2 text-[10px] uppercase tracking-wider text-subtle">
+        Markets · Base sim
+      </div>
       <div className="min-h-0 flex-1 overflow-auto">
         {rows.map((r) => (
           <div key={r.s} className="flex items-center justify-between border-b border-border px-3 py-2">
@@ -29,14 +32,17 @@ export function Watchlist() {
         ))}
       </div>
       <div className="border-t border-border p-3">
-        <div className="mb-1 text-[10px] uppercase tracking-wider text-subtle">Vault inventory</div>
-        <p className="mb-2 text-[11px] leading-snug text-muted">Net futures + covered options. Never naked.</p>
+        <div className="mb-1 text-[10px] uppercase tracking-wider text-subtle">Risk / hedge</div>
+        <p className="mb-2 text-[11px] leading-snug text-muted">Covered. α=40%. 4× IM. Never naked.</p>
         <Stat k="ETH free / total" v={`${freeEth(s).toFixed(2)} / ${s.vault.eth.toFixed(2)}`} />
         <Stat k="USDC free" v={fmtUsd(freeUsdc(s))} />
-        <Stat k="Util" v={`${(utilEth(s) * 100).toFixed(0)}%`} />
+        <Stat k="Util" v={`${(utilEth(s) * 100).toFixed(0)}% / 40%`} />
         <Stat k="Max net long" v={`${maxNetLongEth(s).toFixed(2)} ETH`} />
         <Stat k="Max net short" v={`${maxNetShortEth(s).toFixed(2)} ETH`} />
-        <Stat k="IV" v={`${(s.iv * 100).toFixed(0)}%`} />
+        <Stat k="Book Δ" v={`${g.delta >= 0 ? "+" : ""}${g.delta.toFixed(3)} ETH`} />
+        <Stat k="Book Γ" v={g.gamma.toFixed(4)} />
+        <Stat k="IV / RV" v={`${(s.iv * 100).toFixed(0)}% / ${(s.realizedVol * 100).toFixed(0)}%`} />
+        <Stat k="Insurance" v={fmtUsd(s.insuranceUsdc ?? 0)} />
       </div>
     </div>
   );

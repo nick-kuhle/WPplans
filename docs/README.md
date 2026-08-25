@@ -1,15 +1,20 @@
 # WolfPit docs
 
-Canonical copies for GitHub. The in-app version is `/plan`.
+Canonical copies for GitHub. In-app: `/plan`.
 
 | Doc | Audience |
 | --- | --- |
 | [CEO-BRIEFING.md](./CEO-BRIEFING.md) | Nick |
 | [TEAM.md](./TEAM.md) | Hiring |
 | [BUSINESS-PLAN.md](./BUSINESS-PLAN.md) | Seed / PE |
+| [CHAIN.md](./CHAIN.md) | CTO — Base, not L1 |
+| [LP.md](./LP.md) | Quant + contracts |
+| [FARM.md](./FARM.md) | Token + GTM |
+| [MM.md](./MM.md) | Head of quant |
+| [RISK.md](./RISK.md) | Head of quant + security |
 | [ROADMAP.md](./ROADMAP.md) | All |
-| [PROTOCOL.md](./PROTOCOL.md) | Quant + contracts |
-| [FRONTEND.md](./FRONTEND.md) | Desk engineers |
+| [PROTOCOL.md](./PROTOCOL.md) | Implementers |
+| [FRONTEND.md](./FRONTEND.md) | Desk |
 | [DEPLOYMENT.md](./DEPLOYMENT.md) | CTO |
 
-Simulation desk is the source of truth for v0 economics. Production must not weaken it.
+v1.0 is **simulated funds** on a Base-shaped engine. Production must not weaken [RISK.md](./RISK.md).

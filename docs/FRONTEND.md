@@ -20,7 +20,7 @@ Do not fork the UI. Swap the engine:
 
 1. Keep `useWolf` as a facade or replace with React Query against the adapter
 2. Addresses from env (`VITE_VAULT`, `VITE_POOL_ETH_USDC`, …)
-3. Banner: `Sim · Test pools` → `Testnet` → `Live` (never silent)
+3. Banner: `Sim · Base` → `Base Sepolia` → `Base live` (never silent)
 
 ## Rules for the desk team
 

@@ -2,6 +2,7 @@ import {
   DERIV_FEE,
   FUT_IM,
   FUT_MM,
+  INSURANCE_SEED,
   MINI_ETH,
   PoolId,
   STAKE_APR,
@@ -11,7 +12,21 @@ import {
   type FutSide,
   type OptType,
 } from "./types";
-import { ammOut, bsCall, bsDelta, bsPut, clamp, monthEnd, nextFriday, randn, uid, yearsTo } from "./math";
+import {
+  ammOut,
+  bsCall,
+  bsDelta,
+  bsGamma,
+  bsPut,
+  bsVega,
+  clamp,
+  ivSmile,
+  monthEnd,
+  nextFriday,
+  randn,
+  uid,
+  yearsTo,
+} from "./math";
 
 function rng(seed: number) {
   let a = seed >>> 0;
@@ -88,6 +103,7 @@ export function initialState(now = T0): EngineState {
     options: [],
     fills: [],
     farmWpit: 0,
+    insuranceUsdc: INSURANCE_SEED,
     simSpeed: 1,
     liquidations: 0,
   };
@@ -125,14 +141,19 @@ export function tick(s: EngineState, dtSec: number): EngineState {
   const poolPx = pool.quoteReserve / pool.baseReserve;
   next.wpit = Math.max(0.01, poolPx * 0.85 + next.wpit * 0.1 * Math.exp(wShock) + s.wpit * 0.05);
   next.clock = s.clock + dtSec * 1000;
-  next.iv = clamp(s.iv * 0.999 + (Math.abs(shock) * 40 + 0.55) * 0.001, 0.28, 1.6);
-  next.realizedVol = clamp(s.realizedVol * 0.995 + Math.abs(shock) * Math.sqrt(365.25 * 24 * 3600) * 0.005, 0.2, 2);
+  const instVol = Math.abs(shock) * Math.sqrt(365.25 * 24 * 3600);
+  next.realizedVol = clamp(s.realizedVol * 0.94 + instVol * 0.06, 0.2, 2);
+  next.iv = clamp(1.08 * next.realizedVol, 0.28, 1.6);
 
   next.candles = pushCandle(s.candles, next.clock, next.eth);
   next.wpitCandles = pushCandle(s.wpitCandles, next.clock, next.wpit);
 
-  const emit = WPIT_EMIT_PER_SEC * dtSec * (next.lp.reduce((a, p) => a + p.shares, 0) > 0 ? 1 : 0.15);
-  next.farmWpit = s.farmWpit + emit * 0.7;
+  const u = utilEth(next);
+  const emit = WPIT_EMIT_PER_SEC * dtSec * (0.3 + 0.7 * u);
+  const toFarm = emit * 0.9;
+  const toIns = emit * 0.1 * next.wpit;
+  next.farmWpit = s.farmWpit + toFarm;
+  next.insuranceUsdc = (s.insuranceUsdc ?? INSURANCE_SEED) + toIns;
   if (s.stake.amount > 0) {
     next.account = {
       ...next.account,
@@ -173,7 +194,8 @@ export function futPnl(p: EngineState["futures"][number], mark: number) {
 
 export function optMark(s: EngineState, p: EngineState["options"][number]) {
   const T = yearsTo(p.expiry, s.clock);
-  return p.type === "call" ? bsCall(s.eth, p.strike, T, 0.03, s.iv) : bsPut(s.eth, p.strike, T, 0.03, s.iv);
+  const vol = ivSmile(s.iv, s.eth, p.strike, T);
+  return p.type === "call" ? bsCall(s.eth, p.strike, T, 0.03, vol) : bsPut(s.eth, p.strike, T, 0.03, vol);
 }
 
 export function lpValue(s: EngineState, id: PoolId, shares: number) {
@@ -202,7 +224,27 @@ export function maxNetShortEth(s: EngineState) {
 }
 
 export function spreadBps(s: EngineState) {
-  return 8 + utilEth(s) * 80 + (s.iv - 0.4) * 40;
+  const g = bookGreeks(s);
+  const inv = Math.abs(g.delta) / Math.max(s.vault.eth, 1e-6);
+  return 8 + utilEth(s) * 80 + Math.max(0, s.iv - 0.4) * 40 + inv * 25;
+}
+
+export function bookGreeks(s: EngineState) {
+  let delta = 0;
+  let gamma = 0;
+  let vega = 0;
+  for (const p of s.futures) {
+    delta += p.side === "long" ? -p.sizeEth : p.sizeEth;
+  }
+  for (const p of s.options) {
+    const T = yearsTo(p.expiry, s.clock);
+    const vol = ivSmile(s.iv, s.eth, p.strike, T);
+    const d = bsDelta(s.eth, p.strike, T, 0.03, vol, p.type);
+    delta += -d * p.sizeEth;
+    gamma += -bsGamma(s.eth, p.strike, T, 0.03, vol) * p.sizeEth;
+    vega += -bsVega(s.eth, p.strike, T, 0.03, vol) * p.sizeEth;
+  }
+  return { delta, gamma, vega };
 }
 
 function pushFill(s: EngineState, fill: EngineState["fills"][number]): EngineState {
@@ -439,6 +481,10 @@ function settleAndLiq(s: EngineState): EngineState {
         next = {
           ...closed,
           liquidations: eq < maint ? next.liquidations + 1 : next.liquidations,
+          insuranceUsdc:
+            eq < maint
+              ? next.insuranceUsdc + Math.min(Math.max(eq, 0), 0.01 * p.sizeEth * s.eth)
+              : next.insuranceUsdc,
         };
       }
     }
@@ -542,10 +588,11 @@ export function strikes(spot: number) {
 
 export function optionQuote(s: EngineState, type: OptType, strike: number, expiry: number) {
   const T = yearsTo(expiry, s.clock);
-  const mid = type === "call" ? bsCall(s.eth, strike, T, 0.03, s.iv) : bsPut(s.eth, strike, T, 0.03, s.iv);
-  const d = bsDelta(s.eth, strike, T, 0.03, s.iv, type);
+  const vol = ivSmile(s.iv, s.eth, strike, T);
+  const mid = type === "call" ? bsCall(s.eth, strike, T, 0.03, vol) : bsPut(s.eth, strike, T, 0.03, vol);
+  const d = bsDelta(s.eth, strike, T, 0.03, vol, type);
   const bps = spreadBps(s);
   const ask = mid * (1 + bps / 10_000) + 0.4;
   const bid = Math.max(0.05, mid * (1 - bps / 10_000) - 0.4);
-  return { T, mid, bid, ask, delta: d };
+  return { T, mid, bid, ask, delta: d, iv: vol };
 }

@@ -22,7 +22,7 @@ export function Desk() {
         <div className="flex items-baseline gap-3">
           <h1 className="text-sm font-medium">ETH-USD</h1>
           <span className="font-mono text-lg tabular-nums">{fmtPx(eth)}</span>
-          <span className="text-[10px] uppercase tracking-wider text-warn">Paper · WOLFPIT-*-TEST</span>
+          <span className="text-[10px] uppercase tracking-wider text-warn">Paper · Base · WOLFPIT-*-TEST</span>
         </div>
       </div>
 

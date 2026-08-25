@@ -1,14 +1,17 @@
-# Protocol spec (v0 / v1)
+# Protocol spec (v1.0 sim)
+
+Home chain target: **Base**. See [CHAIN.md](./CHAIN.md). Economics: [LP.md](./LP.md), [FARM.md](./FARM.md), [MM.md](./MM.md), [RISK.md](./RISK.md).
 
 ## Inventory
 
-Let `L` = trader net long futures (ETH). `S` = trader net short futures (ETH).
-`C` = sum of short-call size the vault wrote. `P` = sum of strike×size of short puts.
+Let `L` = trader net long futures (ETH). `S_n` = trader net short futures (ETH).
+`C` = vault short-call size. `P$` = Σ strike × short-put size.
 
 ```
-reservedEth  >= L + C
-reservedUsdc >= S * spot + P
-reservedEth  <= utilCap * vault.eth        # 0.45 in v0
+reservedETH  = L + C
+reservedUSDC = S_n * S + P$
+reservedETH  ≤ 0.40 * vault.ETH
+reservedUSDC ≤ 0.40 * vault.USDC
 ```
 
 If a fill would break this, **reject**. Do not queue. Do not “hedge later.”
@@ -16,27 +19,29 @@ If a fill would break this, **reject**. Do not queue. Do not “hedge later.”
 ## Futures
 
 - Mini = 0.1 ETH
-- IM 20%, MM 10% (v0). Production starts 30–50% IM.
-- Mark every oracle/tick. Liquidate if equity < MM or at expiry.
+- IM 25%, MM 12.5% (4×). Isolated.
+- Mark every tick. Liquidate if equity < MM or at expiry (settle).
 - Open long: lock ETH (vault is short). Open short: sell ETH / lock USDC (vault is long).
 - Close: unwind the hedge. PnL = ±(mark−entry)×size, paid from hedge MTM.
+- Liq penalty 1% of notional (capped at remaining equity) → insurance.
 
 Mismatched entries on a flat book: crystallize spot (sell high / buy low) and pay the winner from that cash. Never from unhedged LP USDC.
 
 ## Options
 
-- User **buys** from the vault in v0. Selling to the vault is v1 with trader margin.
+- User **buys** from the vault. Selling to the vault is v1.1 with trader margin.
 - Calls: lock ETH (covered). Puts: lock strike×size USDC (cash-secured).
-- European, cash-settled on a 30–60 min TWAP in production (last tick in sim).
-- Premium = Black-Scholes(S,K,T,r,IV) + inventory spread.
+- European, cash-settled (sim: last tick; live: 30–60 min TWAP 20:00 UTC).
+- Mid = BS(S,K,T,r=0.03, IV(K)). IV_atm = 1.08×EWMA RV. Skew: OTM puts richer.
+- Spread from util + |Δ| + vol. If vega/gamma cap binds, no quote.
 
 ## Spot
 
-Constant product. Fee 30 bps. WPIT pairs are TEST names until LIVE addresses are injected.
+Constant product in sim, 5–30 bps vol-dynamic (start 30). Live: Uniswap v4 on Base, WolfPit hook, cover never concentrated.
 
-## What v0 explicitly is not
+## Farm / stake
 
-HFT. Naked short gamma. Cross-margin portfolio magic. Physical delivery. American exercise. 0-DTE.
+Util-weighted gauges. Vault 70 / WPIT-USDC 20 / WPIT-ETH 10. ETH-USDC spot unfarmed. Staked WPIT = insurance junior. See [FARM.md](./FARM.md).
 
 ## Adapter
 
@@ -51,4 +56,8 @@ interface DeskEngine {
 }
 ```
 
-Zustand sim implements this today (`src/lib/wolfpit/engine.ts`). Chain adapter must preserve reject rules.
+Zustand sim implements this (`src/lib/wolfpit/engine.ts`). Chain adapter (viem, Base) must preserve reject rules. No silent weakening.
+
+## Explicitly not v1
+
+HFT. Naked short gamma. Cross-margin. Physical delivery. American. 0-DTE. Ethereum L1. Hyperliquid as home. User-sold options.

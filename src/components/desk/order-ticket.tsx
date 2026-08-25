@@ -3,7 +3,7 @@ import { Button } from "@/components/ui/button";
 import { expiries, maxNetLongEth, maxNetShortEth, optionQuote, spreadBps } from "@/lib/wolfpit/engine";
 import { useWolf } from "@/lib/wolfpit/store";
 import type { FutSide, OptType, PoolId } from "@/lib/wolfpit/types";
-import { MINI_ETH } from "@/lib/wolfpit/types";
+import { MINI_ETH, FUT_IM } from "@/lib/wolfpit/types";
 import { fmtPx, fmtUsd } from "@/lib/utils";
 
 const SPOT_POOLS: { id: PoolId; label: string }[] = [
@@ -104,7 +104,7 @@ function FutForm() {
   const contracts = Number(n) || 0;
   const size = contracts * MINI_ETH;
   const cap = side === "long" ? maxNetLongEth(s) : maxNetShortEth(s);
-  const margin = size * eth * 0.2;
+  const margin = size * eth * FUT_IM;
   return (
     <div>
       <p className="mb-3 text-xs leading-snug text-muted">
@@ -131,7 +131,7 @@ function FutForm() {
         </select>
       </Field>
       <p className="mb-3 font-mono text-xs text-muted">
-        Size {size.toFixed(2)} ETH · IM {fmtUsd(margin)} (5×)
+        Size {size.toFixed(2)} ETH · IM {fmtUsd(margin)} (4×)
       </p>
       <Button className="w-full" variant={side === "long" ? "up" : "down"} onClick={() => open(side, contracts, exps[exi]!.at)}>
         Send {side}

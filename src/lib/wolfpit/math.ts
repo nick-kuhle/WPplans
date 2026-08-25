@@ -49,6 +49,22 @@ export function bsDelta(S: number, K: number, T: number, r: number, sig: number,
   return type === "call" ? nd1 : nd1 - 1;
 }
 
+export function bsGamma(S: number, K: number, T: number, r: number, sig: number) {
+  if (T <= 1 / 365 / 24) return 0;
+  const v = Math.max(sig, 0.01);
+  const d1 = (Math.log(S / K) + (r + (v * v) / 2) * T) / (v * Math.sqrt(T));
+  const nd = Math.exp(-0.5 * d1 * d1) / Math.sqrt(2 * Math.PI);
+  return nd / (S * v * Math.sqrt(T));
+}
+
+export function bsVega(S: number, K: number, T: number, r: number, sig: number) {
+  if (T <= 1 / 365 / 24) return 0;
+  const v = Math.max(sig, 0.01);
+  const d1 = (Math.log(S / K) + (r + (v * v) / 2) * T) / (v * Math.sqrt(T));
+  const nd = Math.exp(-0.5 * d1 * d1) / Math.sqrt(2 * Math.PI);
+  return (S * nd * Math.sqrt(T)) / 100;
+}
+
 export function yearsTo(expiry: number, now: number) {
   return Math.max(0, (expiry - now) / (365.25 * 24 * 3600 * 1000));
 }
@@ -80,4 +96,9 @@ export function ammOut(dx: number, x: number, y: number, feeBps: number) {
 
 export function uid(prefix: string) {
   return `${prefix}-${Math.random().toString(36).slice(2, 8)}${Date.now().toString(36).slice(-4)}`;
+}
+
+export function ivSmile(atm: number, S: number, K: number, T: number) {
+  const z = Math.log(K / S) / Math.sqrt(Math.max(T, 1 / 365));
+  return clamp(atm * (1 - 0.18 * z), 0.2, 2);
 }

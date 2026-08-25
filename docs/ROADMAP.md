@@ -1,32 +1,37 @@
 # Roadmap
 
-## P0 — shipped in this repo
+## P0 — shipped
 
-Paper desk. Spot, mini futures, mini options. Test pool names. Farms. Stake. `/plan`.
+Paper desk. Spot, minis, TEST pool names, farms, stake, `/plan`.
 
-## P1 — 0–8 weeks
+## P1 — v1.0 sim (this pass)
 
-- Foundry monorepo: TEST ERC-20s, pools, vault, ERC-1155, keepers
-- Sepolia or Base Sepolia
-- `DeskEngine` interface; viem adapter
-- Quant: export tick log from localStorage, fit spreads
+- Chain decision: **Base**
+- Quant: LP / farm / MM / risk docs
+- Sim: RV→IV, put skew, util-weighted farm, insurance, Δ/Γ panel, IM 25/12.5, α=0.40
+- Still paper. Same UI.
 
-## P2 — 8–16 weeks
+## P2 — 0–8 weeks (contracts)
 
-- Optional unfunded TEST on Base mainnet
-- Two audits + bounty
-- Geo-fence, ToS, no US leverage until memo
-- Load-test liquidations (gap 20%)
+- Foundry, Base Sepolia
+- Uni v4 hook spec + dealer vault + ERC-1155
+- `DeskEngine` viem adapter
+- Tick-log export; fit spreads vs notebook
 
-## P3 — live
+## P3 — 8–16 weeks
 
-- One vault: ETH-USDC, low caps
-- Covered options + inventory futures
-- User leverage 2–3×
-- Insurance floor before WPIT emissions
+- Unfunded TEST on Base (not ETH L1)
+- Two audits, bounty, 20% gap drill
+- Geo-fence
 
-## P4
+## P4 — live vault
 
-- Appchain if quotes must tighten
-- Own dated futures as hedge rung
+- One ETH/USDC vault, tiny caps, 4× max
+- Insurance floor before emissions
+- Covered options + inventory futures only
+
+## P5
+
+- Hyperliquid ETH perp as hedge rung 2
+- MegaETH/Monad only if quotes must go sub-100ms
 - More underlyings after a boring Friday

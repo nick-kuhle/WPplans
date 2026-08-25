@@ -29,7 +29,11 @@ Retail went to perps because expiry UX was bad. Institutions still need term str
 - Mini options: European, cash-settled, covered/cash-secured on the house side
 - LP + farms + WPIT stake (fee discount + first-loss)
 
-**v0 is paper.** v1 is a single ETH-USDC vault. Same UI.
+**v1.0 is paper** on a Base-shaped engine. Live is a single ETH-USDC vault on **Base**, not Ethereum L1.
+
+## 2b. Venue
+
+Hyperliquid owns perps (HIP-3 included). We expire. Listing is Uniswap v4 + a dealer vault, which is an EVM/USDC problem. Base is the 2026 default for that. L1 gas is a hedge-error term we refuse. HL is hedge-rung 2 later. See [CHAIN.md](./CHAIN.md).
 
 ## 3. Why now (Aug 2026)
 

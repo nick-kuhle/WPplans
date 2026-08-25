@@ -2,31 +2,32 @@
 
 ## This preview
 
-`npm run dev` on the App Builder host. Paper only. localStorage key `wolfpit-sim-v1`.
+`npm run dev`. Paper. localStorage `wolfpit-sim-v3`.
 
-## Testnet (P1)
+## Target chain
 
-1. Foundry project (separate package or `contracts/`)
-2. Deploy mock USDC, WETH, WPIT-TEST
-3. Deploy two pools named WOLFPIT-USDC-TEST and WOLFPIT-ETH-TEST
-4. Deploy vault + ERC-1155
-5. Wire `VITE_*` addresses
-6. Keepers: liquidate, expire, harvest
+**Base.** Testnet: Base Sepolia. Production: Base.  
+**Not Ethereum L1.** Hyperliquid is a later hedge adapter, not the home. See [CHAIN.md](./CHAIN.md).
 
-## “Mainnet TEST” (optional, P2)
+## Testnet (P2)
 
-Unfunded ERC-20s on Base (not Ethereum L1 unless you enjoy $100 deploys).
+1. Foundry: mock USDC, WETH, WPIT-TEST
+2. Uni v4 ETH/USDC + WPIT pairs (or v2-style while the hook is written)
+3. Dealer vault + ERC-1155 + gauges
+4. `VITE_CHAIN=base-sepolia` and addresses
+5. Keepers: liquidate, expire, inventory band, harvest
 
-Requirements before that PR:
+## Unfunded TEST on Base mainnet
 
-- [ ] Two audits on the vault
-- [ ] Pause listing
+Allowed only after:
+
+- [ ] Two vault audits
+- [ ] Pause listings
 - [ ] Public addresses + disclaimer
-- [ ] No mint authority left in an EOA
-- [ ] Geo-block if counsel requires
-
-**Do not** put a funded ETH-USDC vault on any production chain until the sim has been gapped 20% in a recorded drill and LP NAV rules hold.
+- [ ] No mint in an EOA
+- [ ] Counsel on geo
+- [ ] Drills in [RISK.md](./RISK.md) recorded pass
 
 ## GitHub
 
-When the org exists, this directory is the first push. Do not rewrite history to hide sim disclaimers.
+[github.com/nick-kuhle/WPplans](https://github.com/nick-kuhle/WPplans)

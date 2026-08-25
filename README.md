@@ -1,14 +1,14 @@
 # WolfPit
 
-Dated crypto futures and options. Inventory-backed. Never naked.
+Dated crypto futures and options. Inventory-backed. Never naked. **Base, not Ethereum L1.**
 
 This repository ships:
 
 1. A thinkorswim-style **paper desk** (spot, mini futures, mini options).
-2. Simulated **WOLFPIT-USDC-TEST** and **WOLFPIT-ETH-TEST** pools, farms, staking.
-3. Operating docs for Nick (CEO), hiring, PE, protocol, and deployment.
+2. Simulated **WOLFPIT-USDC-TEST** and **WOLFPIT-ETH-TEST** pools, util-weighted farms, staking.
+3. Quant specs: LP, farm, MM, hedge/risk — v1.0 simulated.
 
-**This build is simulation.** It does not move real funds. Live contracts are a later adapter behind the same UI.
+**Simulation only.** Live contracts are a later adapter on **Base**.
 
 ## Run
 
@@ -16,30 +16,24 @@ This repository ships:
 npm run dev
 ```
 
-## Product surfaces
+## Surfaces
 
 | Route | What |
 | --- | --- |
 | `/` | Venue |
 | `/trade` | Desk |
 | `/pools` | LP + farms |
-| `/stake` | WPIT stake |
-| `/plan` | CEO briefing, team, roadmap, business, protocol, legal |
+| `/stake` | WPIT (insurance junior) |
+| `/plan` | Briefing + quant |
 
-## Docs (GitHub)
+## Docs
 
-- [docs/README.md](docs/README.md) — index
-- [docs/CEO-BRIEFING.md](docs/CEO-BRIEFING.md)
-- [docs/TEAM.md](docs/TEAM.md)
-- [docs/BUSINESS-PLAN.md](docs/BUSINESS-PLAN.md)
-- [docs/ROADMAP.md](docs/ROADMAP.md)
-- [docs/PROTOCOL.md](docs/PROTOCOL.md)
-- [docs/FRONTEND.md](docs/FRONTEND.md)
-- [docs/DEPLOYMENT.md](docs/DEPLOYMENT.md)
+See [docs/README.md](docs/README.md). Start with [CHAIN.md](docs/CHAIN.md), [MM.md](docs/MM.md), [RISK.md](docs/RISK.md).
 
 ## Hard rules
 
+- Home chain target: Base. Hedge-rung later: Hyperliquid. Never L1 for the vault.
 - Net longs hedged with ETH. Net shorts hedged with USDC.
 - Vault never sells a naked call or put.
-- House hedges are 1:1. Traders may use margin.
+- House hedges 1:1. Traders may use 4× IM.
 - If the hedge cannot complete, the order does not exist.

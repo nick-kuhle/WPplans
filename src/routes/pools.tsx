@@ -23,8 +23,8 @@ function PoolsPage() {
         <p className="font-mono text-[11px] uppercase tracking-wider text-subtle">Farms · test contracts</p>
         <h1 className="mt-2 text-2xl font-medium">Pools</h1>
         <p className="mt-2 max-w-2xl text-sm leading-relaxed text-muted">
-          Same names as mainnet test deployments: WOLFPIT-USDC-TEST and WOLFPIT-ETH-TEST. Deposits here are
-          paper. When live contracts exist, this page points at them without a UI rewrite.
+          Same names as Base test deployments: WOLFPIT-USDC-TEST and WOLFPIT-ETH-TEST. Emissions are
+          util-weighted (vault 70 / WPIT-USDC 20 / WPIT-ETH 10). ETH-USDC spot is not farmed. Paper only.
         </p>
         <div className="mt-8 grid gap-3">
           {IDS.map((id) => {

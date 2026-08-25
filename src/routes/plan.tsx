@@ -5,7 +5,7 @@ import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/plan")({ component: PlanPage });
 
-const TABS = ["Briefing", "Team", "Roadmap", "Business", "Protocol", "Legal"] as const;
+const TABS = ["Briefing", "Team", "Roadmap", "Quant", "Business", "Protocol", "Legal"] as const;
 type Tab = (typeof TABS)[number];
 
 function PlanPage() {
@@ -37,6 +37,7 @@ function PlanPage() {
           {tab === "Briefing" && <Briefing />}
           {tab === "Team" && <Team />}
           {tab === "Roadmap" && <Roadmap />}
+          {tab === "Quant" && <Quant />}
           {tab === "Business" && <Business />}
           {tab === "Protocol" && <Protocol />}
           {tab === "Legal" && <Legal />}
@@ -62,17 +63,15 @@ function Briefing() {
       <ul className="list-disc space-y-1 pl-5">
         <li>Thinkorswim-style desk: chart, ticket, chain, blotter, vault inventory.</li>
         <li>Spot on ETH-USDC, WOLFPIT-USDC-TEST, WOLFPIT-ETH-TEST.</li>
-        <li>Mini futures (0.1 ETH, 5× IM, Friday/month expiry). Hedge 1:1. Size = free inventory × 45%.</li>
+        <li>Mini futures (0.1 ETH, 4× IM, Friday/month expiry). Hedge 1:1. Size = free inventory × 40%.</li>
         <li>Mini options: you buy; vault sells covered calls / cash-secured puts only. European cash settle.</li>
         <li>LP + WPIT farm + staking at 12% simulated APR.</li>
         <li>Paper account $100,000 USDC. Clock 1× / 10× / 60× to watch expiry.</li>
       </ul>
       <H>What we will not do this week</H>
       <p>
-        We will not deploy spendable mainnet contracts until a deployer key, ETH for gas, two independent
-        audits, and a CFTC/ counsel memo exist. Test-named tokens on Ethereum mainnet still cost real gas
-        and are irreversible. The desk already talks to named test pools; swapping the adapter is a later
-        PR, not a product rewrite.
+        We will not deploy a funded vault on Ethereum L1. Gas is hedge error. v1 home is Base. The desk
+        already talks to named test pools; swapping the adapter is a later PR, not a product rewrite.
       </p>
       <H>Your next 10 moves</H>
       <ol className="list-decimal space-y-1 pl-5">
@@ -135,31 +134,55 @@ function Team() {
 function Roadmap() {
   return (
     <>
-      <H>P0 — now (this desk)</H>
-      <p>Paper spot, mini futures, mini options, LP, stake. Inventory engine visible. Clock acceleration.</p>
-      <H>P1 — 0–8 weeks</H>
+      <H>P0 — shipped</H>
+      <p>Paper desk. Inventory visible. Clock acceleration.</p>
+      <H>P1 — v1.0 sim (now)</H>
+      <p>Base decision. RV→IV, put skew, util-weighted farm, insurance, Δ/Γ, 4× IM, α=40%.</p>
+      <H>P2 — contracts</H>
       <ul className="list-disc space-y-1 pl-5">
-        <li>Foundry: ERC-20 TEST tokens, v2-style pools, vault, ERC-1155 positions, expiry keeper.</li>
-        <li>Sepolia / Base Sepolia. Same symbols: WOLFPIT-USDC-TEST, WOLFPIT-ETH-TEST.</li>
-        <li>Adapter: DeskEngine interface. Zustand sim implements it; viem implements it next.</li>
-        <li>Quant notebook: tick tape from this app, calibrate spreads.</li>
+        <li>Foundry on Base Sepolia. Uni v4 hook + vault + ERC-1155.</li>
+        <li>DeskEngine viem adapter. Same symbols.</li>
       </ul>
-      <H>P2 — 8–16 weeks</H>
-      <ul className="list-disc space-y-1 pl-5">
-        <li>Optional unfunded TEST deploy on Base mainnet (cheap gas, still real chain).</li>
-        <li>Two audits. Bug bounty. Load test liquidations.</li>
-        <li>Geo-fence. ToS. No US leverage until counsel says so.</li>
-      </ul>
-      <H>P3 — live vault</H>
-      <ul className="list-disc space-y-1 pl-5">
-        <li>One pool: ETH-USDC. Caps in the hundreds of thousands, not millions.</li>
-        <li>Covered options + inventory futures only. 2–3× user leverage.</li>
-        <li>WPIT emissions only after insurance fund has a floor.</li>
-      </ul>
-      <H>P4 — scale</H>
+      <H>P3 — live</H>
+      <p>One ETH-USDC vault on Base, tiny caps, 4×, insurance floor. Not Ethereum L1.</p>
+      <H>P4</H>
+      <p>Hyperliquid ETH perp as hedge rung 2. More underlyings after a boring Friday.</p>
+    </>
+  );
+}
+
+function Quant() {
+  return (
+    <>
+      <p className="text-fg">
+        v1.0 is paper with surgical limits. Full math is in docs/CHAIN, LP, FARM, MM, RISK on GitHub.
+      </p>
+      <H>Chain</H>
       <p>
-        Appchain or Hyperliquid-class blocktime if quoting needs to tighten. Own dated futures as the hedge
-        rung. More underlyings only when ETH vault survives a witching Friday.
+        Home: <span className="text-fg">Base</span>. Uniswap v4 + canonical USDC + sub-cent keepers. Ethereum
+        L1 is disqualified (gas is hedge error). Hyperliquid is the 2026 perp champion — HIP-3 is still
+        perps. We may hedge there later. We do not list there in v1.
+      </p>
+      <H>LP</H>
+      <p>
+        Spot pools (ETH/USDC, WPIT pairs) are not the pit. The dealer vault is. Cover is full inventory,
+        never a concentrated Uni range. Utilization α = 40%. Reject if the fill would break reserved ETH/USDC.
+      </p>
+      <H>Farm</H>
+      <p>
+        Pay quoting capital. Gauges: vault 70 / WPIT-USDC 20 / WPIT-ETH 10. ETH-USDC spot unfarmed. 10% of
+        emissions → insurance. veWPIT boosts vault only, cap 2.5×. Staked WPIT is first-loss junior.
+      </p>
+      <H>MM</H>
+      <p>
+        Dealer, not vAMM. IV_atm = 1.08 × EWMA RV. Smile: OTM puts richer. Spread = 8 + 80·util + 40·(IV−0.40)
+        + 25·|Δ|/ETH. No quote if the hedge cannot complete. Hedge error ≈ ½ Γ (ΔS)².
+      </p>
+      <H>Risk</H>
+      <p>
+        4× IM / 12.5% MM, isolated. Naked call impossible (lock ETH). Naked put impossible (lock K×size USDC).
+        |Γ| cash 1h ≤ 2% NAV. Insurance seed $25k sim. Five recorded drills before live: −20% 1h, +40% (must
+        not nuke), witching, mismatched entries, util cap reject.
       </p>
     </>
   );

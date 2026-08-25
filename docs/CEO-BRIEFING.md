@@ -1,48 +1,37 @@
 # CEO briefing — Nick
 
-**WolfPit** is a dated derivatives pit for crypto: mini futures and mini options with expiry, inventory-backed market making, Uniswap-style pools, and a native token used for fees, staking, and first-loss insurance.
+**WolfPit** is a dated derivatives pit: mini futures and mini options with expiry, inventory-backed dealing, Uniswap-style pools, WPIT for fees/stake/insurance.
 
-This briefing assumes August 2026. Perps are a solved (and crowded) market. Dated vanilla that lists off a pool, never goes naked, and settles like a US futures pit is not.
+August 2026: perps are crowded (Hyperliquid). Dated vanilla that lists off a pool and never goes naked is not.
 
-## What you can show today
+## Chain (decision)
 
-The app in this repo is a paper trading desk:
+**Base.** Not Ethereum mainnet. L1 gas turns hedging into a loss function we cannot win. Hyperliquid is the best perp venue in 2026 — we may *hedge* there later. We do not *list* there in v1 (HIP-3 is perps; we expire). Full argument: [CHAIN.md](./CHAIN.md).
 
-- Spot: ETH-USDC, WOLFPIT-USDC-TEST, WOLFPIT-ETH-TEST
-- Mini futures: 0.1 ETH multiplier, Friday + monthly expiry, 5× initial margin, 1:1 vault hedge
-- Mini options: user buys; vault sells **covered calls** and **cash-secured puts** only
-- LP, farms, WPIT staking
-- Visible vault inventory and utilization cap (45%)
-- Accelerated clock so you can watch expiry without waiting a week
+## What you can show
 
-**It is not a mainnet vault.** Do not tell investors it is.
+Paper desk: spot, minis, vault caps, RV/IV, insurance, util-weighted farm. $100,000 paper USDC. Clock 1×/10×/60×.
 
-## Why the sim comes first
+It is not a money vault.
 
-1. The insolvency cases (naked short call, unpaired long future, mismatched entries) are easier to kill in a desk than in an incident report.
-2. Quant can calibrate spreads on a tick log before gas is spent.
-3. Frontend does not change when you flip SIM → TEST → LIVE. Only the adapter does.
+## Quant (read these)
 
-## What you will not do until counsel and audits exist
+| Doc | One line |
+| --- | --- |
+| [LP.md](./LP.md) | Spot pools ≠ dealer vault. α=0.40. Cover never concentrated. |
+| [FARM.md](./FARM.md) | Pay quoting capital. Vault 70%. ETH-USDC unfarmed. |
+| [MM.md](./MM.md) | Dealer quotes. IV=1.08×RV. Put skew. No quote without hedge. |
+| [RISK.md](./RISK.md) | Hard rejects. 4× IM. Insurance. Five drills before live. |
 
-- Take real USDC/ETH from the public
-- Deploy spendable WPIT on Ethereum mainnet
-- Offer 10× or 0-DTE
-- Sell protocol-written naked options
-- Let governance vote implied vol
+## Sequence
 
-Test-named tokens on a production chain still cost real gas and are irreversible. Prefer an L2 testnet. If you later deploy unfunded TEST ERC-20s on Base, publish addresses and a pause switch.
+1. Entity + CFTC counsel  
+2. This GitHub  
+3. CTO + Head of Quant  
+4. Seed on the sim + these specs  
+5. Base Sepolia  
+6. Audits + gap drills  
+7. Tiny Base vault  
+8. Flip SIM → LIVE on the same desk  
 
-## Your sequence
-
-1. Entity + foundation split
-2. Derivatives counsel (CFTC)
-3. GitHub org — commit this repo
-4. Hire CTO and Head of Quant
-5. Seed on the sim + this plan ($4–8M illustrative)
-6. Foundry + testnet
-7. Audits
-8. One live ETH-USDC vault with tiny caps
-9. Flip the desk adapter to LIVE
-
-Capital, relationships, and “no” on risk params are your job. Quoting is not.
+You do not override α.

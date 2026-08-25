@@ -20,7 +20,7 @@ export function Shell({ children }: { children: ReactNode }) {
           <span className="font-medium tracking-tight">WolfPit</span>
         </Link>
         <span className="hidden rounded-[var(--radius-xs)] border border-border px-1.5 py-0.5 font-mono text-[10px] uppercase tracking-wider text-warn sm:inline">
-          Sim · Test pools
+          Sim · Base
         </span>
         <nav className="ml-auto flex items-center gap-1">
           {NAV.map((n) => (
