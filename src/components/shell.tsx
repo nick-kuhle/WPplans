@@ -17,7 +17,7 @@ export function Shell({ children }: { children: ReactNode }) {
       <header className="flex h-12 shrink-0 items-center gap-3 border-b border-border px-3 sm:px-4">
         <Link to="/" className="flex items-center gap-2 text-fg">
           <WolfMark className="size-6 text-accent" />
-          <span className="font-medium tracking-tight">WolfPit</span>
+          <span className="font-medium tracking-[0.18em]">WOLFPIT</span>
         </Link>
         <span className="hidden rounded-[var(--radius-xs)] border border-border px-1.5 py-0.5 font-mono text-[10px] uppercase tracking-wider text-warn sm:inline">
           Sim · Base

@@ -6,6 +6,17 @@ Ritual: [WEEK1.md](./WEEK1.md) W1-10.
 
 ---
 
+## 2026-08-25 (Tue) — brand
+
+- Done:
+  - Pit mark: concentric octagon + stamp wolf. Bone `#e6e2d6`, brass inner ring `#c4a15c`.
+  - Files in `public/brand/` (svg + seal/lockup/og rasters + icon-512). Favicon and `WolfMark` updated.
+  - Spec: `docs/BRAND.md`.
+- Blocked: none.
+- Tape: still sim. No deploy.
+
+---
+
 ## 2026-08-25 (Tue) — Week 1 kickoff
 
 - Done:

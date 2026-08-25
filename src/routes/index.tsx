@@ -13,8 +13,8 @@ function Home() {
     <div className="min-h-dvh bg-bg text-fg">
       <header className="flex h-12 items-center justify-between border-b border-border px-4">
         <div className="flex items-center gap-2">
-          <WolfMark className="size-6 text-accent" />
-          <span className="font-medium">WolfPit</span>
+          <WolfMark className="size-7 text-accent" />
+          <span className="text-sm font-medium tracking-[0.22em]">WOLFPIT</span>
         </div>
         <nav className="flex items-center gap-1 text-sm">
           <Link to="/trade" className="flex h-11 items-center px-3 text-muted hover:text-fg">
@@ -38,14 +38,24 @@ function Home() {
         </p>
         <div className="mt-8 flex flex-wrap gap-3">
           <Link to="/trade">
-            <Button size="lg">Enter the desk</Button>
+            <Button>Open the desk</Button>
           </Link>
           <Link to="/plan">
-            <Button size="lg" variant="outline">
-              CEO briefing
-            </Button>
+            <Button variant="outline">Operating plan</Button>
           </Link>
         </div>
+        <figure className="mt-14 max-w-2xl border border-border bg-panel">
+          <img
+            src="/brand/lockup-dark.jpg"
+            alt="WolfPit lockup — octagon pit and wordmark"
+            className="w-full"
+            width={1792}
+            height={1008}
+          />
+          <figcaption className="border-t border-border px-3 py-2 font-mono text-[11px] uppercase tracking-wider text-subtle">
+            Mark · octagon pit · bone on black
+          </figcaption>
+        </figure>
         <dl className="mt-16 grid grid-cols-2 gap-px overflow-hidden rounded-[var(--radius-lg)] border border-border bg-border sm:grid-cols-4">
           <Stat k="ETH mark" v={fmtPx(eth)} />
           <Stat k="WPIT" v={fmtPx(wpit)} />

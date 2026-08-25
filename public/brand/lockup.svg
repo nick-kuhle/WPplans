@@ -1,0 +1,31 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 520 72" fill="none">
+  <title>WolfPit</title>
+  <g transform="translate(4,4)">
+    <polygon
+      points="32,1.6 53.4,10.4 59.2,32 53.4,53.6 32,62.4 10.6,53.6 4.8,32 10.6,10.4"
+      stroke="#e6e2d6"
+      stroke-width="2"
+      stroke-linejoin="round"
+    />
+    <polygon
+      points="32,10 47.2,16.4 52,32 47.2,47.6 32,54 16.8,47.6 12,32 16.8,16.4"
+      stroke="#c4a15c"
+      stroke-width="1.1"
+      stroke-linejoin="round"
+    />
+    <path
+      fill="#e6e2d6"
+      d="M22.4 25.2 26.8 16.4 32 22.8 37.2 16.4 41.6 25.2 39 35 32 44.4 25 35Z"
+    />
+    <path fill="#0b0c0b" d="M27.6 31.4 32 38.6 36.4 31.4Z" />
+  </g>
+  <text
+    x="88"
+    y="46"
+    fill="#e6e2d6"
+    font-family="IBM Plex Sans, 'Iowan Old Style', Palatino, 'Times New Roman', serif"
+    font-size="32"
+    font-weight="500"
+    letter-spacing="8"
+  >WOLFPIT</text>
+</svg>

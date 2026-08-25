@@ -1,0 +1,21 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" fill="none">
+  <title>WolfPit mark</title>
+  <rect width="64" height="64" rx="10" fill="#0b0c0b"/>
+  <polygon
+    points="32,6 51.5,14 58,32 51.5,50 32,58 12.5,50 6,32 12.5,14"
+    stroke="#e6e2d6"
+    stroke-width="2.2"
+    stroke-linejoin="round"
+  />
+  <polygon
+    points="32,13 46.2,19 51,32 46.2,45 32,51 17.8,45 13,32 17.8,19"
+    stroke="#c4a15c"
+    stroke-width="1.15"
+    stroke-linejoin="round"
+  />
+  <path
+    fill="#e6e2d6"
+    d="M22.2 25.2 26.6 16 32 22.6 37.4 16 41.8 25.2 39.2 35.2 32 45 24.8 35.2Z"
+  />
+  <path fill="#0b0c0b" d="M27.4 31.6 32 39.2 36.6 31.6Z" />
+</svg>
