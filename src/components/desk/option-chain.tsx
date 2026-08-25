@@ -42,19 +42,19 @@ export function OptionChain() {
             const atm = Math.abs(k - s.eth) < 60;
             return (
               <tr key={k} className={atm ? "bg-elevated" : undefined}>
-                <td className="px-2 py-2 text-right text-muted">{fmtPx(c.bid)}</td>
+                <td className="px-2 py-2 text-right text-muted">{c.blank ? "—" : fmtPx(c.bid)}</td>
                 <td className="px-2 py-2 text-right">
-                  <button className="text-up" onClick={() => open("call", k, ex.at, 1)}>
-                    {fmtPx(c.ask)}
+                  <button className="text-up" disabled={!!c.blank} onClick={() => open("call", k, ex.at, 1)}>
+                    {c.blank ? "—" : fmtPx(c.ask)}
                   </button>
                 </td>
                 <td className="px-2 py-2 text-center text-subtle">{c.delta.toFixed(2)}</td>
                 <td className="px-2 py-2 text-center text-fg">{k}</td>
                 <td className="px-2 py-2 text-center text-subtle">{p.delta.toFixed(2)}</td>
-                <td className="px-2 py-2 text-right text-muted">{fmtPx(p.bid)}</td>
+                <td className="px-2 py-2 text-right text-muted">{p.blank ? "—" : fmtPx(p.bid)}</td>
                 <td className="px-2 py-2 text-right">
-                  <button className="text-down" onClick={() => open("put", k, ex.at, 1)}>
-                    {fmtPx(p.ask)}
+                  <button className="text-down" disabled={!!p.blank} onClick={() => open("put", k, ex.at, 1)}>
+                    {p.blank ? "—" : fmtPx(p.ask)}
                   </button>
                 </td>
               </tr>

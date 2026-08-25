@@ -30,6 +30,15 @@ npm run dev
 
 Start with [docs/WEEK1.md](docs/WEEK1.md) and [docs/CHAIN.md](docs/CHAIN.md).
 
+## Tests
+
+```bash
+npm run test:engine   # golden G1–G6, RISK caps, drills D1–D5
+forge test --root contracts
+```
+
+v0.1 is paper. Home chain: Base. Push target when Nick opens it: `nick-kuhle/WolfPit`.
+
 ## Hard rules
 
 - Home chain target: Base. Hedge-rung later: Hyperliquid. Never L1 for the vault.

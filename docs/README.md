@@ -12,7 +12,8 @@ Canonical copies for GitHub. In-app: `/plan`.
 | [FARM.md](./FARM.md) | Token + GTM |
 | [MM.md](./MM.md) | Head of quant |
 | [RISK.md](./RISK.md) | Head of quant + security |
-| [BRAND.md](./BRAND.md) | Mark, palette, files |
+| [WEEK1.md](./WEEK1.md) | Dev team |
+| [drills/](./drills/) | D1–D5 recorded |
 | [BUILD-NOTES.md](./BUILD-NOTES.md) | Append-only log |
 | [ROADMAP.md](./ROADMAP.md) | All |
 | [PROTOCOL.md](./PROTOCOL.md) | Implementers |

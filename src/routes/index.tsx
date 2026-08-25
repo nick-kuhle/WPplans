@@ -35,6 +35,7 @@ function Home() {
         <p className="mt-6 max-w-xl text-base leading-relaxed text-muted">
           Not perps. Weekly and monthly vanilla, inventory-backed, quoted off pool depth. This build is paper
           trading against WOLFPIT-USDC-TEST and WOLFPIT-ETH-TEST. Same desk later points at live contracts.
+          Not an offer of futures or options. Not a deposit. No promised return.
         </p>
         <div className="mt-8 flex flex-wrap gap-3">
           <Link to="/trade">

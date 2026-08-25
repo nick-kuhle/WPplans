@@ -1,0 +1,157 @@
+import { UTIL_CAP, type EngineState, type FutSide, type OptType } from "./types";
+import { bsGamma, bsVega, clamp, ivSmile, yearsTo } from "./math";
+
+export const GAMMA_NAV = 0.02;
+export const VEGA_NAV = 0.15;
+export const OI_EXPIRY = 0.25;
+export const OI_STRIKE = 0.1;
+export const FILL_BAND = 0.1;
+export const INSURANCE_NAV_MIN = 0.01;
+export const CIRCUIT_MS = 15 * 60 * 1000;
+export const DT_1H = 1 / (365.25 * 24);
+export const MINUTES_YR = 365.25 * 24 * 60;
+export const CALL_INV_VOL = 0.005;
+
+export function vaultNav(s: EngineState) {
+  return s.vault.eth * s.eth + s.vault.usdc;
+}
+
+export function insuranceRatio(s: EngineState) {
+  const nav = vaultNav(s);
+  return nav <= 0 ? 1 : (s.insuranceUsdc ?? 0) / nav;
+}
+
+export function circuitActive(s: EngineState) {
+  return (s.circuitUntil ?? 0) > s.clock;
+}
+
+export function ret5m(s: EngineState) {
+  const c = s.candles;
+  if (c.length < 6) return 0;
+  const a = c[c.length - 6]!.c;
+  const b = c[c.length - 1]!.c;
+  if (a <= 0) return 0;
+  return (b - a) / a;
+}
+
+export function circuitThreshold(s: EngineState) {
+  return 3 * s.iv * Math.sqrt(5 / MINUTES_YR);
+}
+
+export function maybeCircuit(s: EngineState): EngineState {
+  if (Math.abs(ret5m(s)) > circuitThreshold(s)) {
+    return { ...s, circuitUntil: Math.max(s.circuitUntil ?? 0, s.clock + CIRCUIT_MS) };
+  }
+  return s;
+}
+
+export function spotFeeBps(rv: number) {
+  return Math.round(clamp(5 + 80 * Math.max(0, rv - 0.4), 5, 30));
+}
+
+export function gammaCash1h(gammaAbs: number, spot: number, iv: number) {
+  return Math.abs(gammaAbs) * spot * spot * iv * iv * DT_1H;
+}
+
+export function oiExpiry(s: EngineState, expiry: number) {
+  let n = 0;
+  for (const p of s.options) if (p.expiry === expiry) n += p.sizeEth;
+  for (const p of s.futures) if (p.expiry === expiry) n += p.sizeEth;
+  return n;
+}
+
+export function oiStrike(s: EngineState, strike: number) {
+  return s.options.filter((p) => p.strike === strike).reduce((a, p) => a + p.sizeEth, 0);
+}
+
+export function shortCallSize(s: EngineState) {
+  return s.options.filter((p) => p.type === "call").reduce((a, p) => a + p.sizeEth, 0);
+}
+
+export function haltShortGamma(s: EngineState) {
+  return insuranceRatio(s) < INSURANCE_NAV_MIN || circuitActive(s);
+}
+
+export function remainingCap(s: EngineState, side: FutSide) {
+  if (side === "long") return Math.max(0, s.vault.eth * UTIL_CAP - s.vault.reservedEth);
+  return Math.max(0, (s.vault.usdc * UTIL_CAP) / s.eth - s.vault.reservedUsdc / s.eth);
+}
+
+export function maxFillEth(s: EngineState, side: FutSide) {
+  return remainingCap(s, side) * FILL_BAND;
+}
+
+export function projectedOptionGamma(s: EngineState, type: OptType, strike: number, expiry: number, sizeEth: number) {
+  const T = yearsTo(expiry, s.clock);
+  const vol = smileVol(s, type, strike, T);
+  return -bsGamma(s.eth, strike, T, 0.03, vol) * sizeEth;
+}
+
+export function projectedOptionVega(s: EngineState, type: OptType, strike: number, expiry: number, sizeEth: number) {
+  const T = yearsTo(expiry, s.clock);
+  const vol = smileVol(s, type, strike, T);
+  return -bsVega(s.eth, strike, T, 0.03, vol) * 100 * sizeEth;
+}
+
+export function smileVol(s: EngineState, type: OptType, strike: number, T: number) {
+  let vol = ivSmile(s.iv, s.eth, strike, T);
+  if (type === "call" && shortCallSize(s) > 0) vol += CALL_INV_VOL;
+  return vol;
+}
+
+export function rejectFuture(s: EngineState, side: FutSide, sizeEth: number, expiry: number): string | null {
+  if (sizeEth <= 0) return "Size must be positive.";
+  if (side === "short" && circuitActive(s)) return "Circuit: new shorts halted.";
+  const cap = remainingCap(s, side);
+  if (sizeEth > cap + 1e-9) return `Inventory cap. Max ${cap.toFixed(2)} ETH net this side.`;
+  if (oiExpiry(s, expiry) + sizeEth > s.vault.eth * OI_EXPIRY + 1e-9) {
+    return "OI cap on this expiry (25% of vault ETH).";
+  }
+  const fillMax = cap * FILL_BAND;
+  if (cap > 0 && sizeEth > fillMax + 1e-9) {
+    return `Single fill > 10% of remaining band (${fillMax.toFixed(2)} ETH).`;
+  }
+  return null;
+}
+
+export function rejectOption(
+  s: EngineState,
+  type: OptType,
+  strike: number,
+  expiry: number,
+  sizeEth: number,
+  bookGamma: number,
+  bookVega: number,
+): string | null {
+  if (sizeEth <= 0) return "Size must be positive.";
+  if (haltShortGamma(s)) {
+    if (circuitActive(s)) return "Circuit: new shorts halted.";
+    return "Insurance / NAV < 1%. New short gamma halted.";
+  }
+  if (type === "call") {
+    const free = Math.max(0, s.vault.eth - s.vault.reservedEth);
+    if (free < sizeEth) return "Vault will not sell a naked call. Not enough free ETH to cover.";
+  } else {
+    const lock = strike * sizeEth;
+    const free = Math.max(0, s.vault.usdc - s.vault.reservedUsdc);
+    if (free < lock) return "Vault will not sell a naked put. Not enough USDC to cash-secure.";
+  }
+  if (oiExpiry(s, expiry) + sizeEth > s.vault.eth * OI_EXPIRY + 1e-9) {
+    return "OI cap on this expiry (25% of vault ETH).";
+  }
+  if (oiStrike(s, strike) + sizeEth > s.vault.eth * OI_STRIKE + 1e-9) {
+    return "OI cap on this strike (10% of vault ETH).";
+  }
+  const capSide: FutSide = type === "call" ? "long" : "short";
+  const fillMax = remainingCap(s, capSide) * FILL_BAND;
+  if (fillMax > 0 && sizeEth > fillMax + 1e-9) {
+    return `Single fill > 10% of remaining band (${fillMax.toFixed(2)} ETH).`;
+  }
+  const g = Math.abs(bookGamma + projectedOptionGamma(s, type, strike, expiry, sizeEth));
+  const nav = vaultNav(s);
+  if (gammaCash1h(g, s.eth, s.iv) > GAMMA_NAV * nav) return "Gamma cash cap. Stop writing ATM.";
+  const v = Math.abs(bookVega + projectedOptionVega(s, type, strike, expiry, sizeEth));
+  if (v > VEGA_NAV * nav) return "Vega cap. Stop writing.";
+  return null;
+}
+

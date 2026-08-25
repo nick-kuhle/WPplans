@@ -1,4 +1,5 @@
 import { useWolf, useEquity } from "@/lib/wolfpit/store";
+import { bookGreeks, exportTape } from "@/lib/wolfpit/engine";
 import { fmtPct, fmtUsd } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 
@@ -42,6 +43,23 @@ export function AccountBar() {
             {n}×
           </Button>
         ))}
+        <Button
+          size="sm"
+          variant="outline"
+          onClick={() => {
+            const s = useWolf.getState();
+            const blob = new Blob([JSON.stringify({ ...exportTape(s), greeks: bookGreeks(s) }, null, 2)], {
+              type: "application/json",
+            });
+            const a = document.createElement("a");
+            a.href = URL.createObjectURL(blob);
+            a.download = `wolfpit-tape-${s.clock}.json`;
+            a.click();
+            URL.revokeObjectURL(a.href);
+          }}
+        >
+          Export tape
+        </Button>
         <Button size="sm" variant="ghost" onClick={reset}>
           Reset paper
         </Button>

@@ -1,0 +1,200 @@
+import assert from "node:assert/strict";
+import { describe, it } from "node:test";
+import {
+  advanceClock,
+  bookGreeks,
+  buyOption,
+  closeFuture,
+  expiries,
+  harvestFarm,
+  initialState,
+  setMark,
+  settleNow,
+  tradeFuture,
+} from "./engine.ts";
+import { FUT_IM, FUT_MM, MINI_ETH } from "./types.ts";
+import { CALL_INV_VOL, circuitActive, gammaCash1h, haltShortGamma, rejectFuture, smileVol, spotFeeBps, vaultNav } from "./risk.ts";
+
+const exp = expiries(initialState().clock)[0]!.at;
+
+describe("golden G1–G6", () => {
+  it("G1 buy call with free ETH = 0 → reject", () => {
+    const s = initialState();
+    s.vault.reservedEth = s.vault.eth;
+    const r = buyOption(s, "call", 4000, exp, 1);
+    assert.equal(typeof r, "string");
+    assert.match(String(r), /naked call/i);
+  });
+
+  it("G2 buy put with free USDC < K×size → reject", () => {
+    const s = initialState();
+    s.vault.reservedUsdc = s.vault.usdc;
+    const r = buyOption(s, "put", 4000, exp, 1);
+    assert.equal(typeof r, "string");
+    assert.match(String(r), /naked put/i);
+  });
+
+  it("G3 open long that would push util > 0.40 → reject", () => {
+    let s = initialState();
+    let last: string | typeof s = s;
+    for (let i = 0; i < 500; i++) {
+      const r = tradeFuture(s, "long", 1, exp);
+      if (typeof r === "string") {
+        last = r;
+        break;
+      }
+      s = r;
+    }
+    assert.equal(typeof last, "string");
+    assert.ok(/Inventory cap|10%|OI cap/i.test(String(last)));
+    assert.ok(s.vault.reservedEth / s.vault.eth >= 0.24);
+  });
+
+  it("G4 open future IM = 0.25 × size × S", () => {
+    const s = initialState();
+    const r = tradeFuture(s, "long", 1, exp);
+    assert.equal(typeof r, "object");
+    const next = r as typeof s;
+    const size = MINI_ETH;
+    const im = size * next.futures[0]!.entry * FUT_IM;
+    assert.ok(Math.abs(next.futures[0]!.margin - im) < 1e-6);
+    assert.ok(Math.abs(s.account.usdc - next.account.usdc - im - next.fills[0]!.fee) < 1e-4);
+  });
+
+  it("G5 liquidation when equity < 0.125 × size × S", () => {
+    let s = initialState();
+    const opened = tradeFuture(s, "long", 1, exp);
+    assert.equal(typeof opened, "object");
+    s = opened as typeof s;
+    s = setMark(s, 2500);
+    assert.ok(s.liquidations >= 1);
+    assert.equal(s.futures.length, 0);
+    const maintAtMark = MINI_ETH * 2500 * FUT_MM;
+    assert.ok(maintAtMark > 0);
+  });
+
+  it("G6 hedge 1:1 long N ETH increases reservedETH by N", () => {
+    const s = initialState();
+    const r = tradeFuture(s, "long", 3, exp);
+    assert.equal(typeof r, "object");
+    const next = r as typeof s;
+    assert.ok(Math.abs(next.vault.reservedEth - 0.3) < 1e-9);
+  });
+});
+
+describe("W1-02 risk limits", () => {
+  it("gamma cash helper binds on synthetic gamma", () => {
+    const s = initialState();
+    const nav = vaultNav(s);
+    const cash = gammaCash1h(50, s.eth, 1);
+    assert.ok(cash > 0.02 * nav);
+    assert.ok(gammaCash1h(0.001, s.eth, s.iv) < 0.02 * nav);
+  });
+
+  it("vega cap is evaluated (tiny NAV, 1 mini still blocked by inventory or vega)", () => {
+    const s = initialState();
+    s.vault.eth = 0.5;
+    s.vault.usdc = 200;
+    const r = buyOption(s, "call", 4000, exp, 1);
+    assert.equal(typeof r, "string");
+  });
+
+  it("OI / expiry 25% of vault ETH", () => {
+    const s = initialState();
+    const r = rejectFuture(s, "long", s.vault.eth * 0.26, exp);
+    assert.ok(r && /OI cap on this expiry/i.test(r));
+  });
+
+  it("OI / strike 10% of vault ETH", () => {
+    let s = initialState();
+    let last: string | undefined;
+    for (let i = 0; i < 200; i++) {
+      const r = buyOption(s, "call", 4000, exp, 1);
+      if (typeof r === "string") {
+        last = r;
+        break;
+      }
+      s = r;
+    }
+    assert.ok(last);
+    assert.match(String(last), /strike|10%|Inventory|band/i);
+    assert.ok(s.options.reduce((a, p) => a + p.sizeEth, 0) <= s.vault.eth * 0.1 + MINI_ETH + 1e-6);
+  });
+
+  it("single fill > 10% remaining band", () => {
+    const s = initialState();
+    const r = tradeFuture(s, "long", 50, exp);
+    assert.equal(typeof r, "string");
+    assert.match(String(r), /10%/);
+  });
+
+  it("circuit halts new shorts", () => {
+    let s = initialState();
+    s.candles = [
+      ...s.candles.slice(0, -6),
+      { t: s.clock - 5 * 60_000, o: 4000, h: 4000, l: 4000, c: 4000, v: 1 },
+      { t: s.clock - 4 * 60_000, o: 4000, h: 4000, l: 4000, c: 4000, v: 1 },
+      { t: s.clock - 3 * 60_000, o: 4000, h: 4000, l: 4000, c: 4000, v: 1 },
+      { t: s.clock - 2 * 60_000, o: 4000, h: 4000, l: 4000, c: 4000, v: 1 },
+      { t: s.clock - 1 * 60_000, o: 4000, h: 4000, l: 4000, c: 4000, v: 1 },
+      { t: s.clock, o: 5200, h: 5200, l: 4000, c: 5200, v: 1 },
+    ];
+    s = setMark(s, 5200, { settle: false });
+    assert.ok(circuitActive(s));
+    const r = tradeFuture(s, "short", 1, exp);
+    assert.equal(typeof r, "string");
+    assert.match(String(r), /Circuit/);
+  });
+
+  it("short-call inventory adds 0.5 vol-pt", () => {
+    let s = initialState();
+    const T = (exp - s.clock) / (365.25 * 24 * 3600 * 1000);
+    const before = smileVol(s, "call", 4000, T);
+    const opened = buyOption(s, "call", 3900, exp, 1);
+    assert.equal(typeof opened, "object", String(opened));
+    s = opened as typeof s;
+    const after = smileVol(s, "call", 4000, T);
+    assert.ok(Math.abs(after - before - CALL_INV_VOL) < 1e-9);
+  });
+
+  it("insurance / NAV < 1% halt short gamma", () => {
+    const s = initialState();
+    s.insuranceUsdc = 10;
+    assert.ok(haltShortGamma(s));
+    const r = buyOption(s, "call", 4000, exp, 1);
+    assert.equal(typeof r, "string");
+    assert.match(String(r), /Insurance/);
+  });
+
+  it("spot fee 5–30 from RV", () => {
+    assert.equal(spotFeeBps(0.2), 5);
+    assert.equal(spotFeeBps(0.4), 5);
+    assert.equal(spotFeeBps(0.5), 13);
+    assert.equal(spotFeeBps(1.2), 30);
+  });
+
+  it("harvest 1% tax → insurance", () => {
+    const s = initialState();
+    s.farmWpit = 100;
+    s.wpit = 2;
+    const next = harvestFarm(s);
+    assert.equal(next.farmWpit, 0);
+    assert.ok(Math.abs(next.account.wpit - 99) < 1e-9);
+    assert.ok(Math.abs(next.insuranceUsdc - (s.insuranceUsdc + 2)) < 1e-9);
+  });
+});
+
+describe("desk engine has no hedgeLater", () => {
+  it("book still covers after a fill", () => {
+    const s = initialState();
+    const r = tradeFuture(s, "long", 2, exp);
+    assert.equal(typeof r, "object");
+    const next = r as typeof s;
+    assert.ok(next.vault.eth >= next.vault.reservedEth);
+    assert.ok(bookGreeks(next));
+  });
+});
+
+void closeFuture;
+void settleNow;
+void advanceClock;

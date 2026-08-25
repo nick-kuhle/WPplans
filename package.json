@@ -16,7 +16,9 @@
     "preview:stop": "node scripts/preview.mjs stop",
     "typecheck": "tsc --noEmit",
     "check:auth": "node scripts/check-auth-invariant.mjs",
-    "test": "node --test 'scripts/**/*.test.mjs' && node --experimental-strip-types --test src/lib/app-data/app-data.test.ts src/lib/auth/gate-identity.test.ts",
+    "test:engine": "npx tsx --test src/lib/wolfpit/engine.test.ts src/lib/wolfpit/drills.test.ts",
+    "test:forge": "forge test --root contracts",
+    "test": "node --test 'scripts/**/*.test.mjs' && node --experimental-strip-types --test src/lib/app-data/app-data.test.ts src/lib/auth/gate-identity.test.ts && npm run test:engine",
     "lint": "eslint .",
     "format": "prettier --write ."
   },

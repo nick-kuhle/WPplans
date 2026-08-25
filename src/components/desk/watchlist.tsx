@@ -1,4 +1,5 @@
 import { bookGreeks, freeEth, freeUsdc, maxNetLongEth, maxNetShortEth, utilEth } from "@/lib/wolfpit/engine";
+import { circuitActive, haltShortGamma, insuranceRatio } from "@/lib/wolfpit/risk";
 import { useWolf } from "@/lib/wolfpit/store";
 import { fmtPct, fmtPx, fmtUsd } from "@/lib/utils";
 
@@ -15,6 +16,8 @@ export function Watchlist() {
     { s: "WPIT-USDC-TEST", px: wUsd.quoteReserve / wUsd.baseReserve, ch: 0 },
     { s: "WPIT-ETH-TEST", px: (wEth.quoteReserve / wEth.baseReserve) * s.eth, ch: 0 },
   ];
+  const circ = circuitActive(s);
+  const halt = haltShortGamma(s);
   return (
     <div className="flex h-full min-h-0 flex-col bg-panel">
       <div className="border-b border-border px-3 py-2 text-[10px] uppercase tracking-wider text-subtle">
@@ -34,6 +37,8 @@ export function Watchlist() {
       <div className="border-t border-border p-3">
         <div className="mb-1 text-[10px] uppercase tracking-wider text-subtle">Risk / hedge</div>
         <p className="mb-2 text-[11px] leading-snug text-muted">Covered. α=40%. 4× IM. Never naked.</p>
+        {circ ? <p className="mb-2 text-[11px] text-down">Circuit: new shorts halted.</p> : null}
+        {halt && !circ ? <p className="mb-2 text-[11px] text-down">Short gamma halted (insurance).</p> : null}
         <Stat k="ETH free / total" v={`${freeEth(s).toFixed(2)} / ${s.vault.eth.toFixed(2)}`} />
         <Stat k="USDC free" v={fmtUsd(freeUsdc(s))} />
         <Stat k="Util" v={`${(utilEth(s) * 100).toFixed(0)}% / 40%`} />
@@ -43,6 +48,8 @@ export function Watchlist() {
         <Stat k="Book Γ" v={g.gamma.toFixed(4)} />
         <Stat k="IV / RV" v={`${(s.iv * 100).toFixed(0)}% / ${(s.realizedVol * 100).toFixed(0)}%`} />
         <Stat k="Insurance" v={fmtUsd(s.insuranceUsdc ?? 0)} />
+        <Stat k="Ins / NAV" v={`${(insuranceRatio(s) * 100).toFixed(2)}%`} />
+        <Stat k="Spot fee" v={`${ethPool.feeBps} bps`} />
       </div>
     </div>
   );

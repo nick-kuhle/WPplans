@@ -23,9 +23,14 @@ function PoolsPage() {
         <p className="font-mono text-[11px] uppercase tracking-wider text-subtle">Farms · test contracts</p>
         <h1 className="mt-2 text-2xl font-medium">Pools</h1>
         <p className="mt-2 max-w-2xl text-sm leading-relaxed text-muted">
-          Same names as Base test deployments: WOLFPIT-USDC-TEST and WOLFPIT-ETH-TEST. Emissions are
-          util-weighted (vault 70 / WPIT-USDC 20 / WPIT-ETH 10). ETH-USDC spot is not farmed. Paper only.
+          TEST names. Gauges pay quoting capital, not idle TVL. ETH-USDC spot is unfarmed (swap fees only).
+          Paper only — not a deposit product.
         </p>
+        <ul className="mt-4 grid gap-2 font-mono text-xs text-muted sm:grid-cols-3">
+          <li className="border border-border bg-surface px-3 py-2">Vault 70% · util 0.30+0.70U</li>
+          <li className="border border-border bg-surface px-3 py-2">WPIT-USDC 20%</li>
+          <li className="border border-border bg-surface px-3 py-2">WPIT-ETH 10%</li>
+        </ul>
         <div className="mt-8 grid gap-3">
           {IDS.map((id) => {
             const p = s.pools[id];
@@ -41,6 +46,7 @@ function PoolsPage() {
                     <h2 className="font-mono text-sm">{id}</h2>
                     <p className="mt-1 text-xs text-muted">
                       {p.base}/{p.quote} · fee {p.feeBps / 100}%
+                      {id === "ETH-USDC" ? " · unfarmed" : id === "WPIT-USDC-TEST" ? " · gauge 20%" : " · gauge 10%"}
                     </p>
                   </div>
                   <div className="text-right">

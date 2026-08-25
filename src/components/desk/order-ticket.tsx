@@ -1,6 +1,7 @@
 import { useMemo, useState, type ReactNode } from "react";
 import { Button } from "@/components/ui/button";
 import { expiries, maxNetLongEth, maxNetShortEth, optionQuote, spreadBps } from "@/lib/wolfpit/engine";
+import { rejectFuture } from "@/lib/wolfpit/risk";
 import { useWolf } from "@/lib/wolfpit/store";
 import type { FutSide, OptType, PoolId } from "@/lib/wolfpit/types";
 import { MINI_ETH, FUT_IM } from "@/lib/wolfpit/types";
@@ -105,11 +106,13 @@ function FutForm() {
   const size = contracts * MINI_ETH;
   const cap = side === "long" ? maxNetLongEth(s) : maxNetShortEth(s);
   const margin = size * eth * FUT_IM;
+  const why = rejectFuture(s, side, size, exps[exi]!.at);
   return (
     <div>
       <p className="mb-3 text-xs leading-snug text-muted">
         Mini = {MINI_ETH} ETH. Vault hedges 1:1. Max net {side} {cap.toFixed(2)} ETH. Spread {spreadBps(s).toFixed(0)} bps.
       </p>
+      {why ? <p className="mb-3 text-xs text-down">{why}</p> : null}
       <div className="mb-3 grid grid-cols-2 gap-2">
         <Button variant={side === "long" ? "up" : "outline"} onClick={() => setSide("long")}>
           Long
@@ -133,8 +136,13 @@ function FutForm() {
       <p className="mb-3 font-mono text-xs text-muted">
         Size {size.toFixed(2)} ETH · IM {fmtUsd(margin)} (4×)
       </p>
-      <Button className="w-full" variant={side === "long" ? "up" : "down"} onClick={() => open(side, contracts, exps[exi]!.at)}>
-        Send {side}
+      <Button
+        className="w-full"
+        variant={side === "long" ? "up" : "down"}
+        disabled={!!why || contracts <= 0}
+        onClick={() => open(side, contracts, exps[exi]!.at)}
+      >
+        {why ? "No quote" : `Send ${side}`}
       </Button>
     </div>
   );
@@ -159,6 +167,7 @@ function OptForm() {
       <p className="mb-3 text-xs leading-snug text-muted">
         You buy. Vault sells only if covered (calls) or cash-secured (puts). European, cash-settled.
       </p>
+      {q.blank ? <p className="mb-3 text-xs text-down">{q.blank}</p> : null}
       <div className="mb-3 grid grid-cols-2 gap-2">
         <Button variant={type === "call" ? "up" : "outline"} onClick={() => setType("call")}>
           Call
@@ -191,8 +200,13 @@ function OptForm() {
       <p className="mb-3 font-mono text-xs text-muted">
         Ask {fmtPx(q.ask)} · Δ {q.delta.toFixed(2)} · debit {fmtUsd(premium)}
       </p>
-      <Button className="w-full" variant={type === "call" ? "up" : "down"} onClick={() => open(type, strike, exps[exi]!.at, Number(n) || 0)}>
-        Buy {type}
+      <Button
+        className="w-full"
+        variant={type === "call" ? "up" : "down"}
+        disabled={!!q.blank || !(Number(n) > 0)}
+        onClick={() => open(type, strike, exps[exi]!.at, Number(n) || 0)}
+      >
+        {q.blank ? "No quote" : `Buy ${type}`}
       </Button>
     </div>
   );

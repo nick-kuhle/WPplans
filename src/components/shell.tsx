@@ -2,6 +2,7 @@ import { Link, useRouterState } from "@tanstack/react-router";
 import type { ReactNode } from "react";
 import { WolfMark } from "@/components/mark";
 import { cn } from "@/lib/utils";
+import { chainLabel, chainMode } from "@/lib/wolfpit/chain";
 
 const NAV = [
   { to: "/trade", label: "Desk" },
@@ -12,6 +13,7 @@ const NAV = [
 
 export function Shell({ children }: { children: ReactNode }) {
   const pathname = useRouterState({ select: (s) => s.location.pathname });
+  const live = chainMode() === "base";
   return (
     <div className="flex min-h-dvh flex-col bg-bg text-fg">
       <header className="flex h-12 shrink-0 items-center gap-3 border-b border-border px-3 sm:px-4">
@@ -19,8 +21,13 @@ export function Shell({ children }: { children: ReactNode }) {
           <WolfMark className="size-6 text-accent" />
           <span className="font-medium tracking-[0.18em]">WOLFPIT</span>
         </Link>
-        <span className="hidden rounded-[var(--radius-xs)] border border-border px-1.5 py-0.5 font-mono text-[10px] uppercase tracking-wider text-warn sm:inline">
-          Sim · Base
+        <span
+          className={cn(
+            "hidden rounded-[var(--radius-xs)] border px-1.5 py-0.5 font-mono text-[10px] uppercase tracking-wider sm:inline",
+            live ? "border-down text-down" : "border-border text-warn",
+          )}
+        >
+          {chainLabel()}
         </span>
         <nav className="ml-auto flex items-center gap-1">
           {NAV.map((n) => (

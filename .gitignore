@@ -11,3 +11,6 @@ screenshots/
 *.log
 .node_modules.lock
 AGENTS.md
+contracts/out/
+contracts/cache/
+

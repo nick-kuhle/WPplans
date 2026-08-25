@@ -131,6 +131,12 @@ function Notes() {
   return (
     <>
       <p className="text-fg">Append-only. Newest first. Full file: docs/BUILD-NOTES.md.</p>
+      <H>2026-08-25 (Tue) — Week 1 closed</H>
+      <ul className="list-disc space-y-1 pl-5">
+        <li>Done: G1–G6, RISK caps, D1–D5, Foundry vault, tape export, blank quotes, gauges, VITE_CHAIN, harvest tax.</li>
+        <li>Tape: engine 22/22, forge 8/8. Still sim. Ready for nick-kuhle/WolfPit + new PAT.</li>
+        <li>Nick initials: pending on docs/BUILD-NOTES.md.</li>
+      </ul>
       <H>2026-08-25 (Tue) — kickoff</H>
       <ul className="list-disc space-y-1 pl-5">
         <li>Done: specs locked. Week 1 order written. Desk already paper + Base + insurance + Δ/Γ.</li>
@@ -313,9 +319,13 @@ function Legal() {
         Emissions after legal memo.
       </p>
       <p>
-        Mainnet TEST tokens: still public, still immutable, still a phishing surface. Prefer L2 testnet until
-        the adapter is proven. If you deploy TEST on a production chain, publish addresses, disclaimers, and
-        a kill-switch that only pauses listings — not a silent mint.
+        Mainnet TEST tokens: still public, still immutable, still a phishing surface. Prefer Base testnet
+        until the adapter is proven. Kill-switch pauses listings — not a silent mint.
+      </p>
+      <p>
+        ToS stub (sim): this software is a paper desk. It does not custody assets. It is not an exchange,
+        DCM, SEF, or broker. Do not describe emissions as yield or risk-free. US persons: no leveraged
+        product until counsel says so.
       </p>
     </>
   );

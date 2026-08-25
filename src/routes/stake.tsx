@@ -19,8 +19,9 @@ function StakePage() {
         <p className="font-mono text-[11px] uppercase tracking-wider text-subtle">$WPIT · insurance + fees</p>
         <h1 className="mt-2 text-2xl font-medium">Stake</h1>
         <p className="mt-2 text-sm leading-relaxed text-muted">
-          Staked WPIT is first-loss insurance in production. Here it earns a simulated 12% APR and is the
-          same switch the live protocol will use for fee discounts.
+          Staked WPIT is first-loss junior to the insurance fund: insurance USDC → staked WPIT haircut →
+          pause listings → LP NAV. Simulated emission at 12% is a placeholder funded by emissions, not by
+          selling naked vol. Not a deposit. Not risk-free.
         </p>
         <div className="mt-8 rounded-[var(--radius-lg)] border border-border bg-surface p-5">
           <dl className="grid grid-cols-2 gap-4 text-sm">
@@ -37,7 +38,7 @@ function StakePage() {
               <dd className="font-mono tabular-nums">{fmtUsd(s.wpit, 4)}</dd>
             </div>
             <div>
-              <dt className="text-[10px] uppercase tracking-wider text-subtle">APR</dt>
+              <dt className="text-[10px] uppercase tracking-wider text-subtle">Sim emission</dt>
               <dd className="font-mono tabular-nums">12%</dd>
             </div>
           </dl>

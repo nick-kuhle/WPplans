@@ -104,6 +104,7 @@ export type EngineState = {
   fills: OrderFill[];
   farmWpit: number;
   insuranceUsdc: number;
+  circuitUntil: number;
   simSpeed: 1 | 10 | 60;
   liquidations: number;
 };

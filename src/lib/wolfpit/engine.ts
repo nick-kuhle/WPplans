@@ -27,6 +27,13 @@ import {
   uid,
   yearsTo,
 } from "./math";
+import {
+  maybeCircuit,
+  rejectFuture,
+  rejectOption,
+  smileVol,
+  spotFeeBps,
+} from "./risk";
 
 function rng(seed: number) {
   let a = seed >>> 0;
@@ -104,6 +111,7 @@ export function initialState(now = T0): EngineState {
     fills: [],
     farmWpit: 0,
     insuranceUsdc: INSURANCE_SEED,
+    circuitUntil: 0,
     simSpeed: 1,
     liquidations: 0,
   };
@@ -154,6 +162,8 @@ export function tick(s: EngineState, dtSec: number): EngineState {
   const toIns = emit * 0.1 * next.wpit;
   next.farmWpit = s.farmWpit + toFarm;
   next.insuranceUsdc = (s.insuranceUsdc ?? INSURANCE_SEED) + toIns;
+  const ethPool = { ...next.pools["ETH-USDC"], feeBps: spotFeeBps(next.realizedVol) };
+  next.pools = { ...s.pools, "ETH-USDC": ethPool };
   if (s.stake.amount > 0) {
     next.account = {
       ...next.account,
@@ -161,7 +171,7 @@ export function tick(s: EngineState, dtSec: number): EngineState {
     };
   }
 
-  return settleAndLiq(next);
+  return settleAndLiq(maybeCircuit(next));
 }
 
 function pushCandle(candles: EngineState["candles"], t: number, px: number) {
@@ -342,9 +352,8 @@ export function tradeSpot(s: EngineState, poolId: PoolId, side: "buy" | "sell", 
 
 export function tradeFuture(s: EngineState, side: FutSide, contracts: number, expiry: number): EngineState | string {
   const sizeEth = contracts * MINI_ETH;
-  if (sizeEth <= 0) return "Size must be positive.";
-  const cap = side === "long" ? maxNetLongEth(s) : maxNetShortEth(s);
-  if (sizeEth > cap + 1e-9) return `Inventory cap. Max ${cap.toFixed(2)} ETH net this side.`;
+  const why = rejectFuture(s, side, sizeEth, expiry);
+  if (why) return why;
   const bps = spreadBps(s);
   const px = side === "long" ? s.eth * (1 + bps / 10_000) : s.eth * (1 - bps / 10_000);
   const notional = sizeEth * px;
@@ -424,10 +433,13 @@ export function closeFuture(s: EngineState, id: string): EngineState | string {
 
 export function buyOption(s: EngineState, type: OptType, strike: number, expiry: number, contracts: number): EngineState | string {
   const sizeEth = contracts * MINI_ETH;
-  if (sizeEth <= 0) return "Size must be positive.";
+  const g = bookGreeks(s);
+  const why = rejectOption(s, type, strike, expiry, sizeEth, g.gamma, g.vega);
+  if (why) return why;
   const T = yearsTo(expiry, s.clock);
   if (T <= 0) return "That expiry is done.";
-  const mid = type === "call" ? bsCall(s.eth, strike, T, 0.03, s.iv) : bsPut(s.eth, strike, T, 0.03, s.iv);
+  const vol = smileVol(s, type, strike, T);
+  const mid = type === "call" ? bsCall(s.eth, strike, T, 0.03, vol) : bsPut(s.eth, strike, T, 0.03, vol);
   const bps = spreadBps(s);
   const px = mid * (1 + bps / 10_000) + 0.5;
   const premium = px * sizeEth;
@@ -435,12 +447,9 @@ export function buyOption(s: EngineState, type: OptType, strike: number, expiry:
   if (s.account.usdc < premium + fee) return "Insufficient USDC for premium.";
   const vault = { ...s.vault };
   if (type === "call") {
-    if (freeEth(s) < sizeEth) return "Vault will not sell a naked call. Not enough free ETH to cover.";
     vault.reservedEth += sizeEth;
   } else {
-    const lock = strike * sizeEth;
-    if (freeUsdc(s) < lock) return "Vault will not sell a naked put. Not enough USDC to cash-secure.";
-    vault.reservedUsdc += lock;
+    vault.reservedUsdc += strike * sizeEth;
   }
   const pos = {
     id: uid("opt"),
@@ -506,6 +515,39 @@ function settleAndLiq(s: EngineState): EngineState {
   return { ...next, options: remaining, vault, account: acc };
 }
 
+export function settleNow(s: EngineState): EngineState {
+  return settleAndLiq(s);
+}
+
+export function setMark(s: EngineState, eth: number, opts?: { settle?: boolean }): EngineState {
+  const next = { ...s, eth: Math.max(200, eth) };
+  next.candles = pushCandle(s.candles, next.clock, next.eth);
+  const c = maybeCircuit(next);
+  if (opts?.settle === false) return c;
+  return settleAndLiq(c);
+}
+
+export function advanceClock(s: EngineState, ms: number, opts?: { settle?: boolean }): EngineState {
+  const next = { ...s, clock: s.clock + ms };
+  if (opts?.settle === false) return next;
+  return settleAndLiq(next);
+}
+
+export function exportTape(s: EngineState) {
+  return {
+    clock: s.clock,
+    eth: s.eth,
+    fills: s.fills,
+    vault: s.vault,
+    greeks: bookGreeks(s),
+    iv: s.iv,
+    rv: s.realizedVol,
+    insuranceUsdc: s.insuranceUsdc,
+    circuitUntil: s.circuitUntil,
+    liquidations: s.liquidations,
+  };
+}
+
 export function addLiquidity(s: EngineState, poolId: PoolId, quoteAmt: number): EngineState | string {
   if (quoteAmt <= 0) return "Size must be positive.";
   const pool = { ...s.pools[poolId] };
@@ -565,10 +607,13 @@ export function unstakeWpit(s: EngineState): EngineState {
 }
 
 export function harvestFarm(s: EngineState): EngineState {
+  const tax = s.farmWpit * 0.01;
+  const net = s.farmWpit - tax;
   return {
     ...s,
-    account: { ...s.account, wpit: s.account.wpit + s.farmWpit },
+    account: { ...s.account, wpit: s.account.wpit + net },
     farmWpit: 0,
+    insuranceUsdc: s.insuranceUsdc + tax * s.wpit,
   };
 }
 
@@ -588,11 +633,14 @@ export function strikes(spot: number) {
 
 export function optionQuote(s: EngineState, type: OptType, strike: number, expiry: number) {
   const T = yearsTo(expiry, s.clock);
-  const vol = ivSmile(s.iv, s.eth, strike, T);
+  const vol = smileVol(s, type, strike, T);
   const mid = type === "call" ? bsCall(s.eth, strike, T, 0.03, vol) : bsPut(s.eth, strike, T, 0.03, vol);
   const d = bsDelta(s.eth, strike, T, 0.03, vol, type);
   const bps = spreadBps(s);
+  const g = bookGreeks(s);
+  const why = rejectOption(s, type, strike, expiry, MINI_ETH, g.gamma, g.vega);
   const ask = mid * (1 + bps / 10_000) + 0.4;
   const bid = Math.max(0.05, mid * (1 - bps / 10_000) - 0.4);
-  return { T, mid, bid, ask, delta: d, iv: vol };
+  return { T, mid, bid: why ? 0 : bid, ask: why ? 0 : ask, delta: d, iv: vol, blank: why };
 }
+
