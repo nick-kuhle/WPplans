@@ -34,6 +34,6 @@ It is not a money vault.
 7. Tiny Base vault  
 8. Flip SIM → LIVE on the same desk  
 
-9. Week 1 work order — [WEEK1.md](./WEEK1.md). Log — [BUILD-NOTES.md](./BUILD-NOTES.md).
+9. Week 1 **closed**. Q1 workload: [Q1.md](./Q1.md). Log: [BUILD-NOTES.md](./BUILD-NOTES.md).
 
 You do not override α.

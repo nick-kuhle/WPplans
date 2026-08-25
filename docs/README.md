@@ -12,7 +12,7 @@ Canonical copies for GitHub. In-app: `/plan`.
 | [FARM.md](./FARM.md) | Token + GTM |
 | [MM.md](./MM.md) | Head of quant |
 | [RISK.md](./RISK.md) | Head of quant + security |
-| [WEEK1.md](./WEEK1.md) | Dev team |
+| [Q1.md](./Q1.md) | Dev team — Sep–Nov 2026 |
 | [drills/](./drills/) | D1–D5 recorded |
 | [BUILD-NOTES.md](./BUILD-NOTES.md) | Append-only log |
 | [ROADMAP.md](./ROADMAP.md) | All |

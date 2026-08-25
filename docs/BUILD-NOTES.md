@@ -6,6 +6,16 @@ Ritual: [WEEK1.md](./WEEK1.md) W1-10.
 
 ---
 
+## 2026-08-25 (Tue) — Q1 scoped + v0.1 on WPplans
+
+- Done:
+  - v0.1 pushed to `nick-kuhle/WPplans` @ `2ef9f66`.
+  - Q1 workload (1 Sep–30 Nov): [Q1.md](./Q1.md). ~1,650h scheduled. Sepolia unfunded TEST. No mainnet vault.
+- Blocked: P/Q/U named seats. Hook waits on hire or P owns it.
+- Tape: still sim. Next demo is Sep (D4 netting + 1155 naked revert).
+
+---
+
 ## 2026-08-25 (Tue) — Week 1 closed (sim v0.1)
 
 - Done:

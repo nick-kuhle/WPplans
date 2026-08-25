@@ -5,7 +5,7 @@ import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/plan")({ component: PlanPage });
 
-const TABS = ["Briefing", "Week 1", "Notes", "Team", "Roadmap", "Quant", "Business", "Protocol", "Legal"] as const;
+const TABS = ["Briefing", "Week 1", "Q1", "Notes", "Team", "Roadmap", "Quant", "Business", "Protocol", "Legal"] as const;
 type Tab = (typeof TABS)[number];
 
 function PlanPage() {
@@ -35,6 +35,7 @@ function PlanPage() {
         <article className="prose-wp mt-8 space-y-4 text-sm leading-relaxed text-muted">
           {tab === "Briefing" && <Briefing />}
           {tab === "Week 1" && <Week1 />}
+          {tab === "Q1" && <Q1 />}
           {tab === "Notes" && <Notes />}
           {tab === "Team" && <Team />}
           {tab === "Roadmap" && <Roadmap />}
@@ -123,6 +124,36 @@ function Week1() {
       </ul>
       <H>Calendar</H>
       <p>Tue kickoff. Wed limits + Foundry + blank quotes. Thu drills 1–3 + vault math. Fri drills 4–5 + demo. Mon close. Red Friday extends week 1; it does not start v4.</p>
+      <p className="text-fg">Closed 25 Aug. See Q1 for Sep–Nov.</p>
+    </>
+  );
+}
+
+function Q1() {
+  return (
+    <>
+      <p className="text-fg">1 Sep – 30 Nov 2026. Full tickets: docs/Q1.md. ~1,650h. Unfunded Sepolia only.</p>
+      <H>Done on 30 Nov when</H>
+      <ol className="list-decimal space-y-1 pl-5">
+        <li>Vault + ERC-1155 minis + keepers on Base Sepolia.</li>
+        <li>Uni v4 hook: depth to vault, cover never concentrated, cannot go naked.</li>
+        <li>Same desk, VITE_CHAIN=base-sepolia. Default remains sim.</li>
+        <li>D1–D5 + 20% gap replayed on Sepolia, keepers delayed 2 min.</li>
+        <li>Audit #1 in flight. Audit #2 RFP sent. Bounty drafted.</li>
+        <li>Geo stub. No US leveraged flow. No funded vault. No L1.</li>
+      </ol>
+      <H>Seats</H>
+      <p>Sep: P, Q, U, L. 22 Sep: +P2, P3. 13 Oct: +S. 3 Nov: +I if events exist. No DevRel.</p>
+      <H>Months</H>
+      <ul className="list-disc space-y-1 pl-5">
+        <li>Sep — CI, D4 netting, 1155, hook spec, adapter, geo stub.</li>
+        <li>Oct — hook, keepers, oracles, audit pack, blotter on chain.</li>
+        <li>Nov — public Sepolia TEST, gap drill, staging URL, freeze. Buffer 24–30 Nov is slip only.</li>
+      </ul>
+      <H>Nick’s demos</H>
+      <p>Sep: D4 + naked 1155 revert. Oct: covered call and mini long on Sepolia, keeper liq. Nov: +40%/−20% on Sepolia, pause, audit status. No α control.</p>
+      <H>Do not start</H>
+      <p>Funded vault. Hyperliquid. User-sold options. TGE. Ethereum L1. Raising α.</p>
     </>
   );
 }

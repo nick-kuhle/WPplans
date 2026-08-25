@@ -11,13 +11,17 @@ Paper desk. Spot, minis, TEST pool names, farms, stake, `/plan`.
 - Sim: RV→IV, put skew, util-weighted farm, insurance, Δ/Γ panel, IM 25/12.5, α=0.40
 - Still paper. Same UI.
 
-## P1b — Week 1 (25–31 Aug 2026)
+## P1b — Week 1 (25–31 Aug 2026) — **closed**
 
-Work order: [WEEK1.md](./WEEK1.md). Log: [BUILD-NOTES.md](./BUILD-NOTES.md).
+Work order: [WEEK1.md](./WEEK1.md). v0.1 sim on `main`.
 
-Close RISK gaps in sim, record five drills, Foundry vault skeleton, blank quotes. No Sepolia until that is green.
+## Q1 — 1 Sep – 30 Nov 2026
 
-- Foundry, Base Sepolia
+Full seats + tickets: [Q1.md](./Q1.md).
+
+Sepolia vault + 1155 + v4 hook + keepers + desk adapter. Unfunded. Audits in flight. **No Base mainnet. No funded vault.**
+
+## P2 — contracts (inside Q1, Sep–Oct)
 - Uni v4 hook spec + dealer vault + ERC-1155
 - `DeskEngine` viem adapter
 - Tick-log export; fit spreads vs notebook
